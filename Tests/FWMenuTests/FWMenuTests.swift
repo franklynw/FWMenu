@@ -6,8 +6,6 @@ final class FWMenuTests: XCTestCase {
     
     func testThatMenuBasicContentIsTidiedCorrectly() {
         
-        let windowViewController = WindowViewController()
-        
         // given content with populated sections
         
         let content: [[FWMenuItem]] = [
@@ -23,7 +21,7 @@ final class FWMenuTests: XCTestCase {
             ]
         ]
         
-        let tidiedContent = content.compactMap { windowViewController.tidyMenuContent($0) }
+        let tidiedContent = content.compactMap { ContentTidier.tidyMenuContent($0) }
         
         // then the tidied version should keep all the populated sections
         
@@ -35,8 +33,6 @@ final class FWMenuTests: XCTestCase {
     }
     
     func testThatMenuContentWithEmptySectionsIsTidiedCorrectly() {
-        
-        let windowViewController = WindowViewController()
         
         // given content with some populated and some empty sections
         
@@ -54,7 +50,7 @@ final class FWMenuTests: XCTestCase {
             []
         ]
         
-        let tidiedContent = content.compactMap { windowViewController.tidyMenuContent($0) }
+        let tidiedContent = content.compactMap { ContentTidier.tidyMenuContent($0) }
         
         // then the tidied version should keep all the populated sections and empty sections should be filtered out
         
@@ -63,8 +59,6 @@ final class FWMenuTests: XCTestCase {
     }
     
     func testThatMenuContentWithMenuItemSubmenusIsTidiedCorrectly() {
-        
-        let windowViewController = WindowViewController()
         
         // given content with populated sections & sub-sections
         
@@ -78,7 +72,7 @@ final class FWMenuTests: XCTestCase {
             ]
         ]
         
-        let tidiedContent = content.compactMap { windowViewController.tidyMenuContent($0) }
+        let tidiedContent = content.compactMap { ContentTidier.tidyMenuContent($0) }
         
         // then the tidied version should keep all the populated sub-sections
         
@@ -94,8 +88,6 @@ final class FWMenuTests: XCTestCase {
     }
     
     func testThatMenuContentWithEmptyMenuItemSubmenusIsTidiedCorrectly() {
-        
-        let windowViewController = WindowViewController()
         
         // given content with some populated sections & sub-sections and some empty sections & sub-sections
         
@@ -113,7 +105,7 @@ final class FWMenuTests: XCTestCase {
             []
         ]
         
-        let tidiedContent = content.compactMap { windowViewController.tidyMenuContent($0) }
+        let tidiedContent = content.compactMap { ContentTidier.tidyMenuContent($0) }
         
         // then the tidied version should keep all the populated sub-sections and empty sections should be filtered out
         

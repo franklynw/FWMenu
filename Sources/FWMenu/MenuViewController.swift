@@ -78,6 +78,12 @@ class MenuViewController: UIViewController {
                     additionalPadding = rowPadding + 42
                 }
                 
+//                let label = UILabel()
+//                label.text = $1.name
+//                label.font = .systemFont(ofSize: 17)
+//                label.numberOfLines = 0
+//                let size = label.sizeThatFits(CGSize(width: maxTextWidth, height: .greatestFiniteMagnitude))
+                
                 let size = $1.name.boundingRect(with: CGSize(width: maxTextWidth, height: .greatestFiniteMagnitude), options: .usesLineFragmentOrigin, attributes: [NSAttributedString.Key.font : UIFont.systemFont(ofSize: 17)], context: nil).size
                 let height = size.height + 22
                 

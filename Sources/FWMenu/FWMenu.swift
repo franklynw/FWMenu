@@ -19,7 +19,7 @@ public struct FWMenu<Label: View>: View {
     
     public init(label: Label, sections: [[FWMenuItem]]) {
         self.label = label
-        content = sections
+        content = sections.compactMap { ContentTidier.tidyMenuContent($0) }
         text = nil
         image = nil
         title = nil
@@ -29,7 +29,7 @@ public struct FWMenu<Label: View>: View {
     public init(title: String, imageSystemName: String, sections: [[FWMenuItem]]) where Label == SwiftUI.Label<Text, AnyView> {
         self.title = title
         self.imageName = imageSystemName
-        content = sections
+        content = sections.compactMap { ContentTidier.tidyMenuContent($0) }
         label = nil
         text = nil
         image = nil
@@ -38,7 +38,7 @@ public struct FWMenu<Label: View>: View {
     public init(title: String, image: Image, sections: [[FWMenuItem]]) where Label == SwiftUI.Label<Text, AnyView> {
         self.title = title
         self.image = image
-        content = sections
+        content = sections.compactMap { ContentTidier.tidyMenuContent($0) }
         label = nil
         text = nil
         imageName = nil
@@ -46,7 +46,7 @@ public struct FWMenu<Label: View>: View {
     
     public init(title: String, sections: [[FWMenuItem]]) where Label == Text {
         self.title = title
-        content = sections
+        content = sections.compactMap { ContentTidier.tidyMenuContent($0) }
         label = nil
         text = nil
         image = nil
@@ -55,7 +55,7 @@ public struct FWMenu<Label: View>: View {
     
     public init(imageSystemName: String, sections: [[FWMenuItem]]) where Label == AnyView {
         self.imageName = imageSystemName
-        content = sections
+        content = sections.compactMap { ContentTidier.tidyMenuContent($0) }
         title = nil
         label = nil
         text = nil
@@ -64,7 +64,7 @@ public struct FWMenu<Label: View>: View {
     
     public init(image: Image, sections: [[FWMenuItem]]) where Label == AnyView {
         self.image = image
-        content = sections
+        content = sections.compactMap { ContentTidier.tidyMenuContent($0) }
         title = nil
         label = nil
         text = nil
@@ -96,19 +96,21 @@ public struct FWMenu<Label: View>: View {
     }
     
     public var body: some View {
-         
-        GeometryReader { geometry in
-            Button(
-                action: {
-                    let frame = geometry.frame(in: .named(MenuCoordinateSpaceModifier.menuCoordinateSpaceName))
-                    present(with: frame)
-                }, label: {
-                    buttonLabel()
-                }
-            )
-            .frame(width: geometry.frame(in: .local).width, height: geometry.frame(in: .local).height)
+        
+        if !content.isEmpty {
+            GeometryReader { geometry in
+                Button(
+                    action: {
+                        let frame = geometry.frame(in: .named(MenuCoordinateSpaceModifier.menuCoordinateSpaceName))
+                        present(with: frame)
+                    }, label: {
+                        buttonLabel()
+                    }
+                )
+                .frame(width: geometry.frame(in: .local).width, height: geometry.frame(in: .local).height)
+            }
+            .fixedSize()
         }
-        .fixedSize()
     }
     
     private func present(with frame: CGRect) {

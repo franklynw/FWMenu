@@ -102,13 +102,7 @@ class WindowViewController: UIViewController {
         
         isSetup = true
         
-        let tidiedContent = menuContent.compactMap { tidyMenuContent($0) }
-        guard !tidiedContent.isEmpty else {
-            finished()
-            return
-        }
-        
-        currentMenuViewController = showMenu(tidiedContent)
+        currentMenuViewController = showMenu(menuContent)
     }
     
     func dismissMenu(completion: ((Bool) -> ())? = nil) {
@@ -157,29 +151,31 @@ class WindowViewController: UIViewController {
         let x, y: CGFloat
         let height: CGFloat
         
-        if menuSize.height <= availableTopSpace, availableTopSpace >= availableBottomSpace {
+        // positioning priority order -
+        
+        if menuSize.height <= availableTopSpace, availableTopSpace >= availableBottomSpace { // above the button
             x = min(max(menuButtonFrame.maxX - menuSize.width, menuPadding), screenSize.width - menuSize.width - menuPadding)
             y = menuButtonFrame.minY - menuSize.height - menuPadding
             height = menuSize.height
-        } else if menuSize.height <= availableBottomSpace, availableBottomSpace > availableTopSpace {
+        } else if menuSize.height <= availableBottomSpace, availableBottomSpace > availableTopSpace { // below the button
             x = min(max(menuButtonFrame.maxX - menuSize.width, menuPadding), screenSize.width - menuSize.width - menuPadding)
-            y = menuButtonFrame.maxY + menuPadding
+            y = menuButtonFrame.maxY + menuPadding * 2
             height = menuSize.height
-        } else if menuSize.width <= availableLeftSpace, availableLeftSpace >= availableRightSpace {
+        } else if menuSize.width <= availableLeftSpace, availableLeftSpace >= availableRightSpace { // to the left of the button
             x = menuButtonFrame.minX - menuSize.width - menuPadding
             y = min(screenSize.height - menuSize.height - menuPadding, menuButtonFrame.minY)
             height = min(menuSize.height, screenSize.height - menuPadding * 2)
-        } else if menuSize.width <= availableRightSpace, availableRightSpace > availableLeftSpace {
+        } else if menuSize.width <= availableRightSpace, availableRightSpace > availableLeftSpace { // to the right of the button
             x = menuButtonFrame.maxX + menuPadding
             y = min(screenSize.height - menuSize.height - menuPadding, menuButtonFrame.minY)
             height = min(menuSize.height, screenSize.height - menuPadding * 2)
-        } else if availableTopSpace > availableBottomSpace {
+        } else if availableTopSpace > availableBottomSpace { // above the button, but reduce the menu height
             x = min(max(menuButtonFrame.maxX - menuSize.width, menuPadding), screenSize.width - menuSize.width - menuPadding)
             y = menuButtonFrame.minY - menuSize.height - menuPadding
             height = availableTopSpace
-        } else {
+        } else { // below the button, but reduce the menu height
             x = min(max(menuButtonFrame.maxX - menuSize.width, menuPadding), screenSize.width - menuSize.width - menuPadding)
-            y = menuButtonFrame.maxY + menuPadding
+            y = menuButtonFrame.maxY + menuPadding * 2
             height = availableBottomSpace
         }
         
@@ -252,25 +248,5 @@ class WindowViewController: UIViewController {
         viewController?.willMove(toParent: nil)
         viewController?.view.removeFromSuperview()
         viewController?.removeFromParent()
-    }
-    
-    func tidyMenuContent(_ section: [FWMenuItem]) -> [FWMenuItem]? {
-        
-        let tidied: [FWMenuItem]? = section.compactMap {
-            if !$0.hasSubmenus {
-                return $0
-            }
-            if let menuSections = $0.submenuSections?.compactMap({ tidyMenuContent($0) }), !menuSections.isEmpty {
-                let menuItem = FWMenuItem(name: $0.name, style: $0.style, submenuSections: menuSections)
-                return menuItem
-            }
-            return nil
-        }
-        
-        if let tidied = tidied, !tidied.isEmpty {
-            return tidied
-        }
-        
-        return nil
     }
 }
