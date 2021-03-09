@@ -21,6 +21,7 @@ class MenuViewController: UIViewController, UITableViewDelegate, UITableViewData
     private var isScrollingEnabled = true
     private let sectionHeaderHeight: CGFloat = 7
     private let sectionHeaderColor = UIColor(red: 0.85, green: 0.85, blue: 0.85, alpha: 1)
+    private let minMenuWidth: CGFloat = 250
     
     
     override func viewDidLoad() {
@@ -28,7 +29,6 @@ class MenuViewController: UIViewController, UITableViewDelegate, UITableViewData
         super.viewDidLoad()
         
         view.backgroundColor = .systemGroupedBackground
-        view.translatesAutoresizingMaskIntoConstraints = false
         
         view.layer.cornerRadius = 15
         view.layer.shadowRadius = 50
@@ -127,7 +127,7 @@ class MenuViewController: UIViewController, UITableViewDelegate, UITableViewData
             return $0 + sectionHeight + sectionHeaderHeight
         }
         
-        let width = min(max(maxWidth, 170), availableWidth)
+        let width = min(max(maxWidth, minMenuWidth), availableWidth)
         let height = min(totalHeight - sectionHeaderHeight, availableHeight)
         
         isScrollingEnabled = totalHeight > availableHeight
