@@ -1,20 +1,21 @@
 import SwiftUI
 
 
-public struct FWMenu<Label: View>: View {
+public struct FWMenu<Label: View>: View, FWMenuPresenting {
     
-    let content: [[FWMenuItem]]
+    public let content: [[FWMenuItem]]
+    
+    public var contentBackgroundColor: Color?
+    public var contentAccentColor: Color?
+    public var font: Font?
+    
+    var accentColor: Color?
     
     private let label: Label?
     private let text: Text?
     private let image: Image?
     private let title: String?
     private let imageName: String?
-    
-    var contentBackgroundColor: Color?
-    var contentAccentColor: Color?
-    var accentColor: Color?
-    var font: Font?
     private var hidePolicy: HidePolicy = .alwaysShow
     
     public enum HidePolicy: Equatable {
@@ -130,7 +131,7 @@ public struct FWMenu<Label: View>: View {
     }
     
     private func present(with frame: CGRect) {
-        Presenter.present(parent: self, with: frame)
+        MenuPresenter.present(parent: self, with: frame)
     }
     
     @ViewBuilder

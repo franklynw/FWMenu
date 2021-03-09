@@ -1,82 +1,11 @@
 //
-//  Presenter.swift
+//  WindowViewController.swift
 //  
 //
-//  Created by Franklyn Weber on 08/03/2021.
+//  Created by Franklyn Weber on 09/03/2021.
 //
 
 import SwiftUI
-
-
-class Presenter {
-    
-    private static var window: UIWindow?
-    private static var viewController: WindowViewController?
-    
-    
-    static func present<Label: View>(parent: FWMenu<Label>, with buttonFrame: CGRect) {
-        
-        guard let appWindow = UIApplication.window else {
-            return
-        }
-        guard window == nil else {
-            return
-        }
-        
-        UIApplication.endEditing()
-        
-        if let windowScene = appWindow.windowScene {
-            
-            let newWindow = UIWindow(windowScene: windowScene)
-            
-            let viewController = WindowViewController()
-            viewController.menuContent = parent.content
-            viewController.contentBackgroundColor = parent.contentBackgroundColor
-            viewController.accentColor = parent.contentAccentColor
-            viewController.font = parent.font
-            viewController.menuButtonFrame = buttonFrame
-            viewController.finished = dismiss
-            viewController.view.backgroundColor = .clear
-            
-            let tapGesture: UITapGestureRecognizer = .gestureRecognizer { _ in
-                dismiss()
-            }
-            
-            viewController.view.addGestureRecognizer(tapGesture)
-            
-            newWindow.rootViewController = viewController
-            
-            self.viewController = viewController
-            
-            window = newWindow
-            window?.alpha = 0
-            window?.makeKeyAndVisible()
-            
-            UIView.animate(withDuration: 0.3) {
-                window?.alpha = 1
-                viewController.viewWillAppear(true)
-            }
-        }
-    }
-    
-    static func dismiss() {
-        
-        guard window != nil else {
-            return
-        }
-        
-        viewController?.dismissMenu() { _ in
-            
-            UIView.animate(withDuration: 0.3) {
-                window?.alpha = 0
-                viewController?.view.alpha = 0
-            } completion: { _ in
-                window = nil
-                viewController = nil
-            }
-        }
-    }
-}
 
 
 class WindowViewController: UIViewController {
@@ -176,7 +105,7 @@ class WindowViewController: UIViewController {
         } else { // below the button, but reduce the menu height
             x = min(max(menuButtonFrame.maxX - menuSize.width, menuPadding), screenSize.width - menuSize.width - menuPadding)
             y = menuButtonFrame.maxY + menuPadding * 2
-            height = availableBottomSpace
+            height = availableBottomSpace - menuPadding
         }
         
         menuViewController.view.frame = CGRect(origin: CGPoint(x: x, y: y), size: CGSize(width: menuSize.width, height: height))
