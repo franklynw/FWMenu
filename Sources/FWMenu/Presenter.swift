@@ -11,7 +11,7 @@ import SwiftUI
 class Presenter {
     
     private static var window: UIWindow?
-    private static var viewController: UIViewController?
+    private static var viewController: WindowViewController?
     
     
     static func present(content: [[FWMenuItem]], with buttonFrame: CGRect) {
@@ -62,12 +62,15 @@ class Presenter {
             return
         }
         
-        UIView.animate(withDuration: 0.3) {
-            window?.alpha = 0
-            viewController?.view.alpha = 0
-        } completion: { _ in
-            window = nil
-            viewController = nil
+        viewController?.dismissMenu() { _ in
+            
+            UIView.animate(withDuration: 0.3) {
+                window?.alpha = 0
+                viewController?.view.alpha = 0
+            } completion: { _ in
+                window = nil
+                viewController = nil
+            }
         }
     }
 }
@@ -78,6 +81,7 @@ class WindowViewController: UIViewController {
     var menuContent: [[FWMenuItem]]!
     var menuButtonFrame: CGRect!
     var finished: (() -> ())!
+    var dismiss: ((((Bool) -> ())?) -> ())?
     
     private var currentMenuViewController: MenuViewController?
     private var isSetup = false
@@ -100,15 +104,15 @@ class WindowViewController: UIViewController {
         currentMenuViewController = showMenu(tidiedContent)
     }
     
+    func dismissMenu(completion: ((Bool) -> ())? = nil) {
+        dismiss?(completion)
+    }
+    
     private func showSubMenu(from menuItem: FWMenuItem, position: CGPoint) {
         
         let menuItems = [menuItem.submenus].compactMap { $0 } // TODO: - implement sections here as well
         
-        UIView.animate(withDuration: 0.2) {
-            self.currentMenuViewController?.view.transform = CGAffineTransform(scaleX: 0.1, y: 0.1)
-            self.currentMenuViewController?.view.alpha = 0
-        }
-        
+        dismissMenu()
         currentMenuViewController = showMenu(menuItems, position: position)
     }
     
@@ -126,7 +130,8 @@ class WindowViewController: UIViewController {
         
         let screenSize = UIScreen.main.bounds.size
         let menuPadding: CGFloat = 20
-        let menuOrigin = position ?? menuButtonFrame.origin
+        let menuOrigin = position != nil ? CGPoint(x: menuButtonFrame.origin.x, y: position!.y) : menuButtonFrame.origin
+        let yOffsetFactor: CGFloat = position == nil ? 1 : 0
         let menuButtonSize = menuButtonFrame.size
         
         var x = min(max(menuOrigin.x - menuSize.width / 2, menuPadding), screenSize.width - menuSize.width - menuPadding)
@@ -136,6 +141,7 @@ class WindowViewController: UIViewController {
         let topSpace = menuOrigin.y
         let bottomSpace = screenSize.height - (menuOrigin.y + menuButtonSize.height)
         if topSpace < menuSize.height + menuPadding * 2 && bottomSpace < menuSize.height + menuPadding * 2 {
+            
             if menuSize.width < menuButtonFrame.origin.x - menuPadding * 2 { // fit it to the left
                 menuHeight = min(menuSize.height, screenSize.height - menuPadding * 2)
                 x = menuButtonFrame.origin.x - menuSize.width - menuPadding
@@ -149,17 +155,18 @@ class WindowViewController: UIViewController {
                 y = menuOrigin.y - menuHeight - menuPadding
             } else { // goes below
                 menuHeight = min(menuSize.height, bottomSpace - menuPadding * 2)
-                y = menuOrigin.y + menuButtonSize.height + menuPadding
+                y = menuOrigin.y + (menuButtonSize.height + menuPadding) * yOffsetFactor
             }
+            
         } else if topSpace < menuSize.height + menuPadding * 2 { // goes below
             menuHeight = min(menuSize.height, bottomSpace - menuPadding)
-            y = menuOrigin.y + menuButtonSize.height + menuPadding
+            y = menuOrigin.y + (menuButtonSize.height + menuPadding) * yOffsetFactor
         } else if bottomSpace < menuSize.height + menuPadding * 2 { // goes above
             menuHeight = min(menuSize.height, menuOrigin.y - menuPadding * 2)
             y = menuOrigin.y - menuHeight - menuPadding
         } else if topSpace < screenSize.height / 2 { // goes below
             menuHeight = menuSize.height
-            y = menuOrigin.y + menuButtonSize.height + menuPadding
+            y = menuOrigin.y + (menuButtonSize.height + menuPadding) * yOffsetFactor
         } else { // goes above
             menuHeight = menuSize.height
             y = menuOrigin.y - menuSize.height - menuPadding
@@ -174,8 +181,8 @@ class WindowViewController: UIViewController {
         addChild(menuViewController)
         view.addSubview(menuViewController.view)
         
-        let xConstraint = menuViewController.view.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: menuOrigin.x)
-        let yConstraint = menuViewController.view.topAnchor.constraint(equalTo: view.topAnchor, constant: menuOrigin.y)
+        let xConstraint = menuViewController.view.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: menuOrigin.x - menuSize.width * 0.1)
+        let yConstraint = menuViewController.view.topAnchor.constraint(equalTo: view.topAnchor, constant: menuOrigin.y - menuHeight * 0.1)
         xConstraint.isActive = true
         yConstraint.isActive = true
         
@@ -195,6 +202,23 @@ class WindowViewController: UIViewController {
             } completion: { _ in
                 menuViewController.setScrollingEnabled()
             }
+        }
+        
+        dismiss = { completion in
+            
+//            xConstraint.constant = self.menuButtonFrame.origin.x
+//            yConstraint.constant = self.menuButtonFrame.origin.y
+            let translateX = menuOrigin.x - xConstraint.constant
+            let translateY = menuOrigin.y - yConstraint.constant
+            let translate = CGAffineTransform(translationX: translateX / 2, y: translateY * 2)
+            let scale = CGAffineTransform(scaleX: 0.1, y: 0.1)
+            let transform = scale.concatenating(translate)
+            
+            UIView.animate(withDuration: 0.2, delay: 0, options: .curveEaseIn, animations: {
+                self.currentMenuViewController?.view.transform = transform
+                self.currentMenuViewController?.view.alpha = 0
+//                self.view.layoutIfNeeded()
+            }, completion: completion)
         }
         
         return menuViewController

@@ -71,7 +71,7 @@ class MenuViewController: UIViewController, UITableViewDelegate, UITableViewData
             let cellPosition = CGPoint(x: cellRect.midX, y: cellRect.midY)
             let positionInSuperview = tableView.convert(cellPosition, to: self?.containingView)
             
-            self?.menuItemWasTapped(menuItem, position: positionInSuperview)
+            self?.menuItemWasTapped(menuItem, position: CGPoint(x: positionInSuperview.x, y: positionInSuperview.y - cellRect.height / 2))
         }
         
         return cell
@@ -97,7 +97,7 @@ class MenuViewController: UIViewController, UITableViewDelegate, UITableViewData
         let availableWidth = screenSize.width - menuPadding * 2
         let availableHeight = screenSize.height - menuPadding * 2
         
-        let rowPadding: CGFloat = 30
+        let rowPadding: CGFloat = 32
         var maxWidth = CGFloat.zero
         
         let totalHeight = menuContent.reduce(CGFloat.zero) {
@@ -108,7 +108,7 @@ class MenuViewController: UIViewController, UITableViewDelegate, UITableViewData
                 
                 let maxTextWidth: CGFloat
                 let additionalPadding: CGFloat
-                if $1.image == nil {
+                if $1.image == nil && !$1.hasSubmenus {
                     maxTextWidth = availableWidth - rowPadding
                     additionalPadding = rowPadding
                 } else {
