@@ -15,6 +15,21 @@ public struct FWMenu<Label: View>: View {
     var contentAccentColor: Color?
     var accentColor: Color?
     var font: Font?
+    private var hidePolicy: HidePolicy = .alwaysShow
+    
+    public enum HidePolicy: Equatable {
+        case alwaysShow
+        case dim(opacity: Double)
+        case hide
+        
+        var opacity: Double {
+            switch self {
+            case .alwaysShow: return 1
+            case .dim(let opacity): return opacity
+            case .hide: return 0
+            }
+        }
+    }
     
     
     public init(label: Label, sections: [[FWMenuItem]]) {
@@ -97,7 +112,7 @@ public struct FWMenu<Label: View>: View {
     
     public var body: some View {
         
-        if !content.isEmpty {
+        if !content.isEmpty || !(hidePolicy == .hide) {
             GeometryReader { geometry in
                 Button(
                     action: {
@@ -108,6 +123,7 @@ public struct FWMenu<Label: View>: View {
                     }
                 )
                 .frame(width: geometry.frame(in: .local).width, height: geometry.frame(in: .local).height)
+                .opacity(content.isEmpty ? hidePolicy.opacity : 1)
             }
             .fixedSize()
         }
@@ -173,6 +189,12 @@ extension FWMenu {
     public func font(_ font: Font) -> Self {
         var copy = self
         copy.font = font
+        return copy
+    }
+    
+    public func hidePolicyWhenNoItems(_ hidePolicy: HidePolicy) -> Self {
+        var copy = self
+        copy.hidePolicy = hidePolicy
         return copy
     }
 }
