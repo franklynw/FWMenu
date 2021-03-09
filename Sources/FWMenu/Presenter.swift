@@ -14,7 +14,7 @@ class Presenter {
     private static var viewController: WindowViewController?
     
     
-    static func present(content: [[FWMenuItem]], with buttonFrame: CGRect) {
+    static func present<Label: View>(parent: FWMenu<Label>, with buttonFrame: CGRect) {
         
         guard let appWindow = UIApplication.window else {
             return
@@ -30,7 +30,10 @@ class Presenter {
             let newWindow = UIWindow(windowScene: windowScene)
             
             let viewController = WindowViewController()
-            viewController.menuContent = content
+            viewController.menuContent = parent.content
+            viewController.contentBackgroundColor = parent.contentBackgroundColor
+            viewController.accentColor = parent.contentAccentColor
+            viewController.font = parent.font
             viewController.menuButtonFrame = buttonFrame
             viewController.finished = dismiss
             viewController.view.backgroundColor = .clear
@@ -80,6 +83,9 @@ class WindowViewController: UIViewController {
     
     var menuContent: [[FWMenuItem]]!
     var menuButtonFrame: CGRect!
+    var contentBackgroundColor: Color?
+    var accentColor: Color?
+    var font: Font?
     var finished: (() -> ())!
     var dismiss: ((((Bool) -> ())?) -> ())?
     var replace: ((((Bool) -> ())?) -> ())?
@@ -111,7 +117,14 @@ class WindowViewController: UIViewController {
     
     private func showSubMenu(from menuItem: FWMenuItem, position: CGPoint) {
         
-        let menuItems = [menuItem.submenus].compactMap { $0 } // TODO: - implement sections here as well
+        guard let submenuSections = menuItem.submenuSections else {
+            return
+        }
+        
+        let menuItems: [[FWMenuItem]] = submenuSections.map { submenu in
+            let submenuItems = submenu.compactMap { $0 }
+            return submenuItems
+        }
         
         replace? { [weak self] _ in
             self?.currentMenuViewController = self?.showMenu(menuItems, position: position)
@@ -124,6 +137,9 @@ class WindowViewController: UIViewController {
         
         menuViewController.containingView = view
         menuViewController.menuContent = content
+        menuViewController.contentBackgroundColor = contentBackgroundColor
+        menuViewController.accentColor = accentColor
+        menuViewController.font = font
         menuViewController.finished = finished
         menuViewController.showSubmenu = { [weak self] menuItem, position in
             self?.showSubMenu(from: menuItem, position: position)
@@ -238,20 +254,20 @@ class WindowViewController: UIViewController {
         viewController?.removeFromParent()
     }
     
-    private func tidyMenuContent(_ content: [FWMenuItem]?) -> [FWMenuItem]? {
+    func tidyMenuContent(_ section: [FWMenuItem]) -> [FWMenuItem]? {
         
-        let tidied: [FWMenuItem]? = content?.compactMap {
+        let tidied: [FWMenuItem]? = section.compactMap {
             if !$0.hasSubmenus {
                 return $0
             }
-            if let menuItems = tidyMenuContent($0.submenus), !menuItems.isEmpty {
-                let menuItem = FWMenuItem(name: $0.name, style: $0.style, submenus: menuItems)
+            if let menuSections = $0.submenuSections?.compactMap({ tidyMenuContent($0) }), !menuSections.isEmpty {
+                let menuItem = FWMenuItem(name: $0.name, style: $0.style, submenuSections: menuSections)
                 return menuItem
             }
             return nil
         }
         
-        if tidied?.isEmpty == false {
+        if let tidied = tidied, !tidied.isEmpty {
             return tidied
         }
         

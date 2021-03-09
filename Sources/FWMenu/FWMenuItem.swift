@@ -5,7 +5,7 @@
 //  Created by Franklyn Weber on 08/03/2021.
 //
 
-import UIKit
+import SwiftUI
 
 
 public struct FWMenuItem {
@@ -13,15 +13,16 @@ public struct FWMenuItem {
     let image: UIImage?
     let style: Style
     let action: (() -> ())?
-    let submenus: [FWMenuItem]?
+    let submenuSections: [[FWMenuItem]]?
     
     var hasSubmenus: Bool {
-        return submenus != nil
+        return submenuSections != nil
     }
     
     public enum Style {
         case plain
-        case colored(textColor: UIColor, iconColor: UIColor? = nil, backgroundColor: UIColor? = nil)
+        case styled(font: Font? = nil, textColor: Color, iconColor: Color? = nil, backgroundColor: Color? = nil)
+        case uiStyled(font: UIFont? = nil, textColor: UIColor, iconColor: UIColor? = nil, backgroundColor: UIColor? = nil)
     }
     
     public init(name: String, imageName: String? = nil, style: Style = .plain, action: @escaping (() -> ())) {
@@ -33,7 +34,7 @@ public struct FWMenuItem {
         }
         self.style = style
         self.action = action
-        submenus = nil
+        submenuSections = nil
     }
     
     public init(name: String, systemImageName: String, style: Style = .plain, action: @escaping (() -> ())) {
@@ -41,14 +42,18 @@ public struct FWMenuItem {
         image = UIImage(systemName: systemImageName)
         self.style = style
         self.action = action
-        submenus = nil
+        submenuSections = nil
     }
     
-    public init(name: String, style: Style = .plain, submenus: [FWMenuItem]) {
+    public init(name: String, style: Style = .plain, submenuSections: [[FWMenuItem]]) {
         self.name = name
         self.style = style
-        self.submenus = submenus
+        self.submenuSections = submenuSections
         image = nil
         action = nil
+    }
+    
+    public init(name: String, style: Style = .plain, submenuItems: [FWMenuItem]) {
+        self.init(name: name, style: style, submenuSections: [submenuItems])
     }
 }

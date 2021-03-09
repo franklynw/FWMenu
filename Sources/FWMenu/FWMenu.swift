@@ -3,7 +3,7 @@ import SwiftUI
 
 public struct FWMenu<Label: View>: View {
     
-    private let content: [[FWMenuItem]]
+    let content: [[FWMenuItem]]
     
     private let label: Label?
     private let text: Text?
@@ -11,62 +11,88 @@ public struct FWMenu<Label: View>: View {
     private let title: String?
     private let imageName: String?
     
-    private var accentColor: Color?
-    private var font: Font?
+    var contentBackgroundColor: Color?
+    var contentAccentColor: Color?
+    var accentColor: Color?
+    var font: Font?
     
     
-    public init(label: Label, content: [[FWMenuItem]]) {
+    public init(label: Label, sections: [[FWMenuItem]]) {
         self.label = label
-        self.content = content
+        content = sections
         text = nil
         image = nil
         title = nil
         imageName = nil
     }
     
-    public init(title: String, imageSystemName: String, content: [[FWMenuItem]]) where Label == SwiftUI.Label<Text, AnyView> {
+    public init(title: String, imageSystemName: String, sections: [[FWMenuItem]]) where Label == SwiftUI.Label<Text, AnyView> {
         self.title = title
         self.imageName = imageSystemName
-        self.content = content
+        content = sections
         label = nil
         text = nil
         image = nil
     }
     
-    public init(title: String, image: Image, content: [[FWMenuItem]]) where Label == SwiftUI.Label<Text, AnyView> {
+    public init(title: String, image: Image, sections: [[FWMenuItem]]) where Label == SwiftUI.Label<Text, AnyView> {
         self.title = title
         self.image = image
-        self.content = content
+        content = sections
         label = nil
         text = nil
         imageName = nil
     }
     
-    public init(title: String, content: [[FWMenuItem]]) where Label == Text {
+    public init(title: String, sections: [[FWMenuItem]]) where Label == Text {
         self.title = title
-        self.content = content
+        content = sections
         label = nil
         text = nil
         image = nil
         imageName = nil
     }
     
-    public init(imageSystemName: String, content: [[FWMenuItem]]) where Label == AnyView {
+    public init(imageSystemName: String, sections: [[FWMenuItem]]) where Label == AnyView {
         self.imageName = imageSystemName
-        self.content = content
+        content = sections
         title = nil
         label = nil
         text = nil
         image = nil
     }
     
-    public init(image: Image, content: [[FWMenuItem]]) where Label == AnyView {
-        self.content = content
+    public init(image: Image, sections: [[FWMenuItem]]) where Label == AnyView {
         self.image = image
+        content = sections
         title = nil
         label = nil
         text = nil
         imageName = nil
+    }
+    
+    public init(label: Label, items: [FWMenuItem]) {
+        self.init(label: label, sections: [items])
+    }
+    
+    public init(title: String, imageSystemName: String, items: [FWMenuItem]) where Label == SwiftUI.Label<Text, AnyView> {
+        self.init(title: title, imageSystemName: imageSystemName, sections: [items])
+    }
+    
+    public init(title: String, image: Image, items: [FWMenuItem]) where Label == SwiftUI.Label<Text, AnyView> {
+        self.init(title: title, image: image, sections: [items])
+    }
+    
+    public init(title: String, items: [FWMenuItem]) where Label == Text {
+        self.init(title: title, sections: [items])
+    }
+    
+    public init(imageSystemName: String, items: [FWMenuItem]) where Label == AnyView {
+        self.init(imageSystemName: imageSystemName, sections: [items])
+    }
+    
+    public init(image: Image, items: [FWMenuItem]) where Label == AnyView {
+        self.init(image: image, sections: [items])
     }
     
     public var body: some View {
@@ -86,67 +112,55 @@ public struct FWMenu<Label: View>: View {
     }
     
     private func present(with frame: CGRect) {
-        Presenter.present(content: content, with: frame)
+        Presenter.present(parent: self, with: frame)
     }
     
     @ViewBuilder
     private func buttonLabel() -> some View {
-    
+        
         if let label = label {
             label
-        } else if let title = title, let image = image {
+        } else {
             
             SwiftUI.Label(
                 title: {
-                    Text(title)
-                        .font(font)
-                        .foregroundColor(accentColor ?? Color(.label))
+                    if let title = title {
+                        Text(title)
+                            .font(font)
+                            .foregroundColor(accentColor ?? Color(.label))
+                    }
                 },
                 icon: {
-                    image
-                        .font(font)
-                        .accentColor(accentColor ?? Color(.label))
+                    
+                    if let imageName = imageName {
+                        Image(systemName: imageName)
+                            .font(font)
+                            .accentColor(accentColor ?? Color(.label))
+                    } else {
+                        image
+                            .font(font)
+                            .accentColor(accentColor ?? Color(.label))
+                    }
                 }
             )
-            
-        } else if let title = title, let imageName = imageName {
-            
-            SwiftUI.Label(
-                title: {
-                    Text(title)
-                        .font(font)
-                        .foregroundColor(accentColor ?? Color(.label))
-                },
-                icon: {
-                    Image(systemName: imageName)
-                        .font(font)
-                        .accentColor(accentColor ?? Color(.label))
-                }
-            )
-            
-        } else if let title = title {
-            
-            Text(title)
-                .font(font)
-                .foregroundColor(accentColor ?? Color(.label))
-            
-        } else if let image = image {
-            
-            image
-                .font(font)
-                .accentColor(accentColor ?? Color(.label))
-            
-        } else if let imageName = imageName {
-            
-            Image(systemName: imageName)
-                .font(font)
-                .accentColor(accentColor ?? Color(.label))
         }
     }
 }
 
 
 extension FWMenu {
+    
+    public func contentBackgroundColor(_ contentBackgroundColor: Color) -> Self {
+        var copy = self
+        copy.contentBackgroundColor = contentBackgroundColor
+        return copy
+    }
+    
+    public func contentAccentColor(_ contentAccentColor: Color) -> Self {
+        var copy = self
+        copy.contentAccentColor = contentAccentColor
+        return copy
+    }
     
     public func accentColor(_ accentColor: Color) -> Self {
         var copy = self

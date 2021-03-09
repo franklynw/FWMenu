@@ -5,16 +5,19 @@
 //  Created by Franklyn Weber on 08/03/2021.
 //
 
-import UIKit
+import SwiftUI
 
 
-class MenuViewController: UIViewController, UITableViewDelegate, UITableViewDataSource {
+class MenuViewController: UIViewController {
     
     @IBOutlet weak var tableView: UITableView!
     
     weak var containingView: UIView?
     
     var menuContent: [[FWMenuItem]] = [[]]
+    var contentBackgroundColor: Color?
+    var accentColor: Color?
+    var font: Font?
     var showSubmenu: ((FWMenuItem, CGPoint) -> ())!
     var finished: (() -> ())!
     
@@ -28,7 +31,13 @@ class MenuViewController: UIViewController, UITableViewDelegate, UITableViewData
         
         super.viewDidLoad()
         
-        view.backgroundColor = .systemGroupedBackground
+        if let contentBackgroundColor = contentBackgroundColor {
+            view.backgroundColor = UIColor(contentBackgroundColor)
+            tableView.backgroundColor = UIColor(contentBackgroundColor)
+        } else {
+            view.backgroundColor = .systemGroupedBackground
+            tableView.backgroundColor = .systemGroupedBackground
+        }
         
         view.layer.cornerRadius = 15
         view.layer.shadowRadius = 50
@@ -38,56 +47,9 @@ class MenuViewController: UIViewController, UITableViewDelegate, UITableViewData
         
         tableView.layer.cornerRadius = 15
         tableView.layer.masksToBounds = true
-        tableView.backgroundColor = .systemGroupedBackground
         
         tableView.delegate = self
         tableView.dataSource = self
-    }
-    
-    func numberOfSections(in tableView: UITableView) -> Int {
-        return menuContent.count
-    }
-    
-    func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        return menuContent[section].count
-    }
-    
-    func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-        
-        let cell = tableView.dequeueReusableCell(withIdentifier: MenuRowCell.cellIdentifier, for: indexPath) as! MenuRowCell
-        
-        let rowPosition: MenuRowCell.RowPosition
-        
-        if indexPath.section == menuContent.count - 1, indexPath.row == menuContent[menuContent.count - 1].count - 1 {
-            rowPosition = .bottom
-        } else {
-            rowPosition = .other
-        }
-        
-        let menuItem = menuContent[indexPath.section][indexPath.row]
-        cell.configure(with: menuItem, rowPosition: rowPosition, containingView: containingView) { [weak self] in
-            
-            let cellRect = tableView.rectForRow(at: indexPath)
-            let cellPosition = CGPoint(x: cellRect.midX, y: cellRect.midY)
-            let positionInSuperview = tableView.convert(cellPosition, to: self?.containingView)
-            
-            self?.menuItemWasTapped(menuItem, position: CGPoint(x: positionInSuperview.x, y: positionInSuperview.y - cellRect.height / 2))
-        }
-        
-        return cell
-    }
-    
-    func tableView(_ tableView: UITableView, viewForHeaderInSection section: Int) -> UIView? {
-        let view = UIView(frame: CGRect(origin: .zero, size: CGSize(width: UIScreen.main.bounds.width, height: sectionHeaderHeight)))
-        view.backgroundColor = sectionHeaderColor
-        return view
-    }
-    
-    func tableView(_ tableView: UITableView, heightForHeaderInSection section: Int) -> CGFloat {
-        if section == 0 {
-            return 0
-        }
-        return sectionHeaderHeight
     }
     
     var menuSize: CGSize {
@@ -151,72 +113,53 @@ class MenuViewController: UIViewController, UITableViewDelegate, UITableViewData
 }
 
 
-class MenuRowCell: UITableViewCell {
+extension MenuViewController: UITableViewDelegate, UITableViewDataSource {
     
-    static let cellIdentifier = "MenuRow"
-    
-    enum RowPosition {
-        case bottom
-        case other
+    func numberOfSections(in tableView: UITableView) -> Int {
+        return menuContent.count
     }
     
-    @IBOutlet weak var titleLabel: UILabel!
-    @IBOutlet weak var iconImage: UIImageView!
-    @IBOutlet weak var backgroundColorView: UIView!
-    @IBOutlet weak var lineView: UIView!
-    @IBOutlet weak var titleTrailingConstraint: NSLayoutConstraint!
-    @IBOutlet weak var titleImageConstraint: NSLayoutConstraint!
+    func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
+        return menuContent[section].count
+    }
     
-    private let lineColor = UIColor(red: 0.85, green: 0.85, blue: 0.85, alpha: 1)
-    
-    
-    func configure(with menuItem: FWMenuItem, rowPosition: RowPosition, containingView: UIView?, tapped: @escaping () -> ()) {
+    func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         
-        titleLabel.text = menuItem.name
+        let cell = tableView.dequeueReusableCell(withIdentifier: MenuRowCell.cellIdentifier, for: indexPath) as! MenuRowCell
         
-        if menuItem.hasSubmenus {
-            iconImage.image = UIImage(systemName: "chevron.right")
+        let rowPosition: MenuRowCell.RowPosition
+        
+        if indexPath.section == menuContent.count - 1, indexPath.row == menuContent[menuContent.count - 1].count - 1 {
+            rowPosition = .bottom
         } else {
-            iconImage.image = menuItem.image
+            rowPosition = .other
         }
         
-        switch menuItem.style {
-        case .plain:
-            titleLabel.textColor = .label
-            iconImage.tintColor = .label
-            backgroundColorView.backgroundColor = .systemGroupedBackground
-        case .colored(let textColor, let iconColor, let backgroundColor):
-            titleLabel.textColor = textColor
-            iconImage.tintColor = iconColor ?? textColor
-            backgroundColorView.backgroundColor = backgroundColor ?? .systemGroupedBackground
+        let menuItem = menuContent[indexPath.section][indexPath.row]
+        cell.configure(with: menuItem, accentColor: accentColor, font: font, rowPosition: rowPosition, containingView: containingView) { [weak self] in
+            
+            let cellRect = tableView.rectForRow(at: indexPath)
+            let cellPosition = CGPoint(x: cellRect.midX, y: cellRect.midY)
+            let positionInSuperview = tableView.convert(cellPosition, to: self?.containingView)
+            
+            self?.menuItemWasTapped(menuItem, position: CGPoint(x: positionInSuperview.x, y: positionInSuperview.y - cellRect.height / 2))
         }
         
-        if titleTrailingConstraint == nil {
-            titleTrailingConstraint = titleLabel.trailingAnchor.constraint(equalTo: contentView.trailingAnchor)
+        return cell
+    }
+    
+    func tableView(_ tableView: UITableView, viewForHeaderInSection section: Int) -> UIView? {
+        let view = UIView(frame: CGRect(origin: .zero, size: CGSize(width: UIScreen.main.bounds.width, height: sectionHeaderHeight)))
+        view.backgroundColor = sectionHeaderColor
+        return view
+    }
+    
+    func tableView(_ tableView: UITableView, heightForHeaderInSection section: Int) -> CGFloat {
+        if section == 0 {
+            return 0
         }
-        if titleImageConstraint == nil {
-            titleImageConstraint = titleLabel.trailingAnchor.constraint(equalTo: iconImage.leadingAnchor)
-        }
-        
-        if menuItem.image == nil {
-            titleTrailingConstraint.constant = menuItem.image == nil ? 14 : 58
-            titleTrailingConstraint.isActive = true
-            titleImageConstraint.isActive = false
-        } else {
-            titleImageConstraint.isActive = true
-            titleTrailingConstraint.isActive = false
-        }
-        
-        switch rowPosition {
-        case .bottom:
-            lineView.backgroundColor = .clear
-        case .other:
-            lineView.backgroundColor = lineColor
-        }
-        
-        let tapGestureRecognizer: UITapGestureRecognizer = .gestureRecognizer { _ in
-            tapped()
-        }
-        addGestureRecognizer(tapGestureRecognizer)
+        return sectionHeaderHeight
     }
 }
+
+
