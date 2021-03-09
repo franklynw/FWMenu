@@ -21,9 +21,14 @@ class MenuViewController: UIViewController {
     var showSubmenu: ((FWMenuItem, CGPoint) -> ())!
     var finished: (() -> ())!
     
+    private var selectedRow: IndexPath?
     private var isScrollingEnabled = true
+    private var done = false
+    
     private let sectionHeaderHeight: CGFloat = 7
     private let sectionHeaderColor = UIColor(red: 0.85, green: 0.85, blue: 0.85, alpha: 1)
+    private let defaultBackgroundColor = UIColor(red: 0.95, green: 0.95, blue: 0.95, alpha: 1)
+    private let selectedBackgroundColor = UIColor(red: 0.92, green: 0.92, blue: 0.92, alpha: 1)
     private let minMenuWidth: CGFloat = 250
     
     
@@ -32,11 +37,11 @@ class MenuViewController: UIViewController {
         super.viewDidLoad()
         
         if let contentBackgroundColor = contentBackgroundColor {
-            view.backgroundColor = UIColor(contentBackgroundColor)
-            tableView.backgroundColor = UIColor(contentBackgroundColor)
+            view.backgroundColor = UIColor(contentBackgroundColor).withAlphaComponent(0.9)
+            tableView.backgroundColor = UIColor(contentBackgroundColor).withAlphaComponent(0.9)
         } else {
-            view.backgroundColor = .systemGroupedBackground
-            tableView.backgroundColor = .systemGroupedBackground
+            view.backgroundColor = defaultBackgroundColor//UIColor.systemGroupedBackground.withAlphaComponent(0.9)
+            tableView.backgroundColor = defaultBackgroundColor//UIColor.systemGroupedBackground.withAlphaComponent(0.9)
         }
         
         view.layer.cornerRadius = 15
@@ -50,6 +55,35 @@ class MenuViewController: UIViewController {
         
         tableView.delegate = self
         tableView.dataSource = self
+        
+        let panGestureRecognizer: UIPanGestureRecognizer = .gestureRecognizer { [weak self] recognizer in
+            
+            guard let self = self, !self.isScrollingEnabled else {
+                return
+            }
+            
+            let indexPath = self.indexPath(forRowAtOffset: recognizer.location(in: self.tableView).y)
+            
+            switch recognizer.state {
+            case .began, .changed:
+                self.selectRow(at: indexPath)
+            case .ended:
+                self.selectRow(at: nil)
+                if let indexPath = indexPath {
+                    
+                    let cellRect = self.tableView.rectForRow(at: indexPath)
+                    let cellPosition = CGPoint(x: cellRect.midX, y: cellRect.midY)
+                    let positionInSuperview = self.tableView.convert(cellPosition, to: self.containingView)
+                    
+                    let menuItem = self.menuContent[indexPath.section][indexPath.row]
+                    self.menuItemWasTapped(menuItem, position: positionInSuperview)
+                }
+            default:
+                self.selectRow(at: nil)
+            }
+        }
+        panGestureRecognizer.delegate = self
+        tableView.addGestureRecognizer(panGestureRecognizer)
     }
     
     var menuSize: CGSize {
@@ -85,7 +119,7 @@ class MenuViewController: UIViewController {
 //                let size = label.sizeThatFits(CGSize(width: maxTextWidth, height: .greatestFiniteMagnitude))
                 
                 let size = $1.name.boundingRect(with: CGSize(width: maxTextWidth, height: .greatestFiniteMagnitude), options: .usesLineFragmentOrigin, attributes: [NSAttributedString.Key.font : UIFont.systemFont(ofSize: 17)], context: nil).size
-                let height = size.height + 22
+                let height = size.height + 22.5
                 
                 maxWidth = max(size.width + additionalPadding, maxWidth)
                 
@@ -109,12 +143,81 @@ class MenuViewController: UIViewController {
     
     private func menuItemWasTapped(_ menuItem: FWMenuItem, position: CGPoint) {
         
+        guard !done else {
+            return
+        }
+        
+        done = true
+        
         if menuItem.hasSubmenus {
             showSubmenu(menuItem, position)
         } else {
             menuItem.action?()
             finished()
         }
+    }
+    
+    private func selectRow(at indexPath: IndexPath?) {
+        
+        if let selectedRow = selectedRow, selectedRow != indexPath {
+            tableView.deselectRow(at: selectedRow, animated: false)
+        }
+        if let indexPath = indexPath {
+            tableView.selectRow(at: indexPath, animated: false, scrollPosition: .none)
+        }
+        
+        selectedRow = indexPath
+    }
+    
+    private func indexPath(forRowAtOffset offset: CGFloat) -> IndexPath? {
+        
+        // don't know if there's a better way of finding the row for a particular y position, when there are varying row heights
+        // in any case, this is super quick as it's just a binary search
+        
+        let tableHeight = tableView.contentSize.height
+        let totalRows = menuContent.reduce(0) { $0 + $1.count }
+        let sectionsCount = menuContent.count
+        
+        var guess = Int(offset / tableHeight * CGFloat(totalRows))
+        var step = guess / 2
+        var result: IndexPath?
+        var finished = false
+        
+        while !finished {
+            
+            var indexPath: IndexPath?
+            var sectionIndex = 0
+            var pointer = guess
+            
+            while indexPath == nil && sectionIndex < sectionsCount {
+                let items = menuContent[sectionIndex]
+                let itemsCount = items.count
+                if pointer >= itemsCount {
+                    pointer -= items.count
+                    sectionIndex += 1
+                } else {
+                    indexPath = IndexPath(row: pointer, section: sectionIndex)
+                }
+            }
+            
+            if let indexPath = indexPath, indexPath.row >= 0 {
+                let rowRect = tableView.rectForRow(at: indexPath).inset(by: UIEdgeInsets(top: indexPath.row == 0 ? -sectionHeaderHeight : 0, left: 0, bottom: 0, right: 0))
+                if offset < rowRect.minY {
+                    guess -= step
+                } else if offset > rowRect.maxY {
+                    guess += step
+                } else {
+                    result = indexPath
+                    finished = true
+                }
+                step = Int(max(((CGFloat(step) + 0.5) / 2), 1))
+                guess = min(totalRows, guess)
+            } else {
+                finished = true
+            }
+        }
+        
+        return result
     }
 }
 
@@ -151,6 +254,16 @@ extension MenuViewController: UITableViewDelegate, UITableViewDataSource {
             self?.menuItemWasTapped(menuItem, position: CGPoint(x: positionInSuperview.x, y: positionInSuperview.y - cellRect.height / 2))
         }
         
+        let bgView = UIView()
+        
+        if let contentBackgroundColor = contentBackgroundColor {
+            bgView.backgroundColor = UIColor(contentBackgroundColor)
+        } else {
+            bgView.backgroundColor = selectedBackgroundColor
+        }
+        
+        cell.selectedBackgroundView = bgView
+        
         return cell
     }
     
@@ -169,3 +282,9 @@ extension MenuViewController: UITableViewDelegate, UITableViewDataSource {
 }
 
 
+extension MenuViewController: UIGestureRecognizerDelegate {
+    
+    func gestureRecognizer(_ gestureRecognizer: UIGestureRecognizer, shouldRecognizeSimultaneouslyWith otherGestureRecognizer: UIGestureRecognizer) -> Bool {
+        return true
+    }
+}

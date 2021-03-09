@@ -38,6 +38,7 @@ public struct FWMenuPresenter: View, FWMenuPresenting {
         
         DoIf($isPresented) {
             MenuPresenter.present(parent: self, with: sourceRect)
+            isPresented = false
         }
     }
 }
