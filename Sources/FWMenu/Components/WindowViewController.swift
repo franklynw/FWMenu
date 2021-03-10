@@ -14,14 +14,16 @@ class WindowViewController: UIViewController {
     
     var menuContent: [[FWMenuItem]]!
     var menuButtonFrame: CGRect!
+    var menuType: FWMenuType!
     var contentBackgroundColor: Color?
     var accentColor: Color?
     var font: Font?
     var finished: (() -> ())!
     var dismiss: ((((Bool) -> ())?) -> ())?
     var replace: ((((Bool) -> ())?) -> ())?
+    var updateContent: (() -> ())?
     
-    private var currentMenuViewController: MenuViewController?
+    private var menuViewControllers: [MenuViewController] = []
     private var isSetup = false
     
     override func viewWillAppear(_ animated: Bool) {
@@ -33,41 +35,106 @@ class WindowViewController: UIViewController {
         
         isSetup = true
         
-        currentMenuViewController = showMenu(menuContent)
+        let menuViewController = showMenu(menuContent, indexPath: nil)
+        menuViewControllers.append(menuViewController)
     }
     
     func dismissMenu(completion: ((Bool) -> ())? = nil) {
         dismiss?(completion)
     }
+}
+
+
+// MARK: - Private
+extension WindowViewController {
     
-    private func showSubMenu(from menuItem: FWMenuItem, position: CGPoint) {
+    private func showSubMenu(from menuItem: FWMenuItem, indexPath: IndexPath, position: CGPoint) {
         
-        guard let submenuSections = menuItem.submenuSections else {
+        guard let menuItems = getMenuContent(from: menuItem) else {
             return
         }
         
-        let menuItems: [[FWMenuItem]] = submenuSections.map { submenu in
-            let submenuItems = submenu.compactMap { $0 }
-            return submenuItems
-        }
-        
         replace? { [weak self] _ in
-            self?.currentMenuViewController = self?.showMenu(menuItems, position: position)
+            if let menuViewController = self?.showMenu(menuItems, indexPath: indexPath, position: position) {
+                self?.menuViewControllers.append(menuViewController)
+            }
         }
     }
     
-    private func showMenu(_ content: [[FWMenuItem]], position: CGPoint? = nil) -> MenuViewController {
+    private func dismissLevel() {
+        
+        removeTopMenu { [weak self] _ in
+            
+            guard let self = self else {
+                return
+            }
+            
+            self.updateContent?()
+            self.menuViewControllers.enumerated().forEach {
+                
+                let index = $0.offset
+                let menuViewController = $0.element
+                
+                func recalculateSize() {
+                    
+                    let menuSize = menuViewController.menuSize
+                    if menuSize != menuViewController.view.frame.size {
+                        
+                        let minX = menuViewController.view.frame.minX
+                        let maxX = min(minX + menuSize.width, UIScreen.main.bounds.width - Self.menuPadding)
+                        let x = maxX - menuSize.width
+                        let y = menuViewController.view.frame.minY
+                        let height = menuViewController.view.frame.height
+                        
+                        UIView.animate(withDuration: 0.2) {
+                            menuViewController.view.frame = CGRect(origin: CGPoint(x: x, y: y), size: CGSize(width: menuSize.width, height: height))
+                        }
+                    }
+                }
+                
+                if index == 0 {
+                    menuViewController.refreshContent(self.menuContent)
+                    recalculateSize()
+                } else if let menuSectionIndex = menuViewController.index {
+                    
+                    let menuItem = self.menuContent[index - 1][menuSectionIndex]
+                    guard let menuItems = self.getMenuContent(from: menuItem) else {
+                        return
+                    }
+                    
+                    menuViewController.refreshContent(menuItems)
+                    recalculateSize()
+                }
+            }
+            
+            self.menuViewControllers.last?.isTopMenu = true
+        }
+    }
+    
+    private func showMenu(_ content: [[FWMenuItem]], indexPath: IndexPath?, position: CGPoint? = nil) -> MenuViewController {
         
         let menuViewController = UIStoryboard(name: "MenuViewController", bundle: .module).instantiateInitialViewController() as! MenuViewController
         
         menuViewController.containingView = view
         menuViewController.menuContent = content
+        menuViewController.index = indexPath?.section
         menuViewController.contentBackgroundColor = contentBackgroundColor
         menuViewController.accentColor = accentColor
         menuViewController.font = font
-        menuViewController.finished = finished
-        menuViewController.showSubmenu = { [weak self] menuItem, position in
-            self?.showSubMenu(from: menuItem, position: position)
+        
+        menuViewController.showSubmenu = { [weak self] menuItem, indexPath, position in
+            self?.showSubMenu(from: menuItem, indexPath: indexPath, position: position)
+        }
+        
+        menuViewController.finished = { [weak self] in
+            switch self?.menuType {
+            case .standard:
+                self?.finished()
+            case .settings:
+                self?.dismissLevel()
+            case .none:
+                break
+            }
         }
         
         let menuSize = menuViewController.menuSize
@@ -138,7 +205,7 @@ class WindowViewController: UIViewController {
         
         dismiss = { [weak self] completion in
             
-            let viewController = self?.currentMenuViewController
+            let viewControllers = self?.menuViewControllers
             
             let buttonX = self?.menuButtonFrame.midX ?? 0
             let buttonY = self?.menuButtonFrame.midY ?? 0
@@ -146,31 +213,33 @@ class WindowViewController: UIViewController {
             let transform = scale.concatenating(translate)
             
             UIView.animate(withDuration: 0.15) {
-                viewController?.view.alpha = 0
+                viewControllers?.forEach {
+                    $0.view.alpha = 0
+                }
             }
             UIView.animate(withDuration: 0.3, animations: {
-                viewController?.view.transform = transform
+                viewControllers?.forEach {
+                    $0.view.transform = transform
+                }
             }, completion: { finished in
-                self?.removeViewController(viewController)
+                viewControllers?.forEach {
+                    self?.removeViewController($0)
+                }
                 completion?(finished)
             })
         }
         
         replace = { [weak self] completion in
             
-            let viewController = self?.currentMenuViewController
-            
-            UIView.animate(withDuration: 0.15, animations: {
-                viewController?.view.alpha = 0
-            }, completion: { finished in
-                completion?(finished)
-            })
-            UIView.animate(withDuration: 0.3, animations: {
-                viewController?.view.alpha = 0
-                viewController?.view.transform = scale
-            }, completion: { finished in
-                self?.removeViewController(viewController)
-            })
+            switch self?.menuType {
+            case .settings:
+                completion?(true)
+                return
+            case .standard:
+                self?.removeTopMenu(completion: completion)
+            case .none:
+                return
+            }
         }
         
         let panGestureRecognizer: UIPanGestureRecognizer = .gestureRecognizer(delegate: self) { recognizer in
@@ -181,6 +250,37 @@ class WindowViewController: UIViewController {
         return menuViewController
     }
     
+    private func getMenuContent(from menuItem: FWMenuItem) -> [[FWMenuItem]]? {
+        
+        guard let submenuSections = menuItem.submenuSections else {
+            return nil
+        }
+        
+        let menuItems: [[FWMenuItem]] = submenuSections.map { submenu in
+            let submenuItems = submenu.compactMap { $0 }
+            return submenuItems
+        }
+        
+        return menuItems
+    }
+    
+    private func removeTopMenu(completion: ((Bool) -> ())?) {
+        
+        let viewController = menuViewControllers.removeLast()
+        
+        UIView.animate(withDuration: 0.15, animations: {
+            viewController.view.alpha = 0
+        }, completion: { finished in
+            completion?(finished)
+        })
+        UIView.animate(withDuration: 0.3, animations: {
+            viewController.view.alpha = 0
+            viewController.view.transform = CGAffineTransform(scaleX: 0.01, y: 0.01)
+        }, completion: { finished in
+            self.removeViewController(viewController)
+        })
+    }
+    
     private func removeViewController(_ viewController: UIViewController?) {
         viewController?.willMove(toParent: nil)
         viewController?.view.removeFromSuperview()
@@ -189,6 +289,7 @@ class WindowViewController: UIViewController {
 }
 
 
+// MARK: - UIGestureRecognizerDelegate
 extension WindowViewController: UIGestureRecognizerDelegate {
     
     func gestureRecognizer(_ gestureRecognizer: UIGestureRecognizer, shouldRecognizeSimultaneouslyWith otherGestureRecognizer: UIGestureRecognizer) -> Bool {

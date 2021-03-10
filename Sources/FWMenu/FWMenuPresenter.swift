@@ -44,25 +44,3 @@ public struct FWMenuPresenter: View, FWMenuPresenting {
         }
     }
 }
-
-
-extension FWMenuPresenter {
-    
-    public func contentBackgroundColor(_ contentBackgroundColor: Color) -> Self {
-        var copy = self
-        copy.contentBackgroundColor = contentBackgroundColor
-        return copy
-    }
-    
-    public func contentAccentColor(_ contentAccentColor: Color) -> Self {
-        var copy = self
-        copy.contentAccentColor = contentAccentColor
-        return copy
-    }
-    
-    public func font(_ font: Font) -> Self {
-        var copy = self
-        copy.font = font
-        return copy
-    }
-}

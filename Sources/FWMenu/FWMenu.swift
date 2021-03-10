@@ -1,22 +1,35 @@
+//
+//  FWMenu.swift
+//
+//
+//  Created by Franklyn Weber on 09/03/2021.
+//
+
 import SwiftUI
 
 
 public struct FWMenu<Label: View>: View, FWMenuPresenting {
     
+    /*
+     A replacement for Apple's Menu struct, but more customisable
+     Also addresses an issue in Apple's version where the background continues to receive touch events while the menu is showing
+     */
+    
     public let content: () -> ([[FWMenuItem]])
     
+    public var menuType: FWMenuType = .standard // TODO: - FWMenuType.settings is somewhat fragile, & will probably crash if the client code alters the structure of the menus after an item is selected
     public var contentBackgroundColor: Color?
     public var contentAccentColor: Color?
     public var font: Font?
     
     var accentColor: Color?
+    var hidePolicy: HidePolicy = .alwaysShow
     
     private let label: Label?
     private let text: Text?
     private let image: Image?
     private let title: String?
     private let imageName: String?
-    private var hidePolicy: HidePolicy = .alwaysShow
     
     public enum HidePolicy: Equatable {
         case alwaysShow
@@ -193,39 +206,5 @@ public struct FWMenu<Label: View>: View, FWMenuPresenting {
                 }
             )
         }
-    }
-}
-
-
-extension FWMenu {
-    
-    public func contentBackgroundColor(_ contentBackgroundColor: Color) -> Self {
-        var copy = self
-        copy.contentBackgroundColor = contentBackgroundColor
-        return copy
-    }
-    
-    public func contentAccentColor(_ contentAccentColor: Color) -> Self {
-        var copy = self
-        copy.contentAccentColor = contentAccentColor
-        return copy
-    }
-    
-    public func accentColor(_ accentColor: Color) -> Self {
-        var copy = self
-        copy.accentColor = accentColor
-        return copy
-    }
-    
-    public func font(_ font: Font) -> Self {
-        var copy = self
-        copy.font = font
-        return copy
-    }
-    
-    public func hidePolicyWhenNoItems(_ hidePolicy: HidePolicy) -> Self {
-        var copy = self
-        copy.hidePolicy = hidePolicy
-        return copy
     }
 }
