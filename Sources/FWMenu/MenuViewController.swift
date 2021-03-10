@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import CGExtensions
 
 
 class MenuViewController: UIViewController {
@@ -30,6 +31,7 @@ class MenuViewController: UIViewController {
     private let defaultBackgroundColor = UIColor(red: 0.95, green: 0.95, blue: 0.95, alpha: 1)
     private let selectedBackgroundColor = UIColor(red: 0.92, green: 0.92, blue: 0.92, alpha: 1)
     private let minMenuWidth: CGFloat = 250
+    private let dragSensitivity: CGFloat = 250 // the lower the number, the more static the user's finger needs to be for the selection to occur
     
     
     override func viewDidLoad() {
@@ -40,8 +42,8 @@ class MenuViewController: UIViewController {
             view.backgroundColor = UIColor(contentBackgroundColor).withAlphaComponent(0.9)
             tableView.backgroundColor = UIColor(contentBackgroundColor).withAlphaComponent(0.9)
         } else {
-            view.backgroundColor = defaultBackgroundColor//UIColor.systemGroupedBackground.withAlphaComponent(0.9)
-            tableView.backgroundColor = defaultBackgroundColor//UIColor.systemGroupedBackground.withAlphaComponent(0.9)
+            view.backgroundColor = defaultBackgroundColor
+            tableView.backgroundColor = defaultBackgroundColor
         }
         
         view.layer.cornerRadius = 15
@@ -55,43 +57,14 @@ class MenuViewController: UIViewController {
         
         tableView.delegate = self
         tableView.dataSource = self
-        
-        let panGestureRecognizer: UIPanGestureRecognizer = .gestureRecognizer { [weak self] recognizer in
-            
-            guard let self = self, !self.isScrollingEnabled else {
-                return
-            }
-            
-            let indexPath = self.indexPath(forRowAtOffset: recognizer.location(in: self.tableView).y)
-            
-            switch recognizer.state {
-            case .began, .changed:
-                self.selectRow(at: indexPath)
-            case .ended:
-                self.selectRow(at: nil)
-                if let indexPath = indexPath {
-                    
-                    let cellRect = self.tableView.rectForRow(at: indexPath)
-                    let cellPosition = CGPoint(x: cellRect.midX, y: cellRect.midY)
-                    let positionInSuperview = self.tableView.convert(cellPosition, to: self.containingView)
-                    
-                    let menuItem = self.menuContent[indexPath.section][indexPath.row]
-                    self.menuItemWasTapped(menuItem, position: positionInSuperview)
-                }
-            default:
-                self.selectRow(at: nil)
-            }
-        }
-        panGestureRecognizer.delegate = self
-        tableView.addGestureRecognizer(panGestureRecognizer)
     }
     
     var menuSize: CGSize {
         
         let screenSize = UIScreen.main.bounds.size
-        let menuPadding: CGFloat = 20
+        let menuPadding = WindowViewController.menuPadding
         let availableWidth = screenSize.width - menuPadding * 2
-        let availableHeight = screenSize.height - menuPadding * 2
+        let availableHeight = screenSize.height - menuPadding * (UIDevice.hasNotch ? 6 : 3) // allow for status bar & notch
         
         let rowPadding: CGFloat = 32
         var maxWidth = CGFloat.zero
@@ -141,6 +114,40 @@ class MenuViewController: UIViewController {
         tableView.isScrollEnabled = isScrollingEnabled
     }
     
+    func userPanned(_ gestureRecognizer: UIPanGestureRecognizer) {
+        
+        guard !isScrollingEnabled else {
+            return
+        }
+        
+        let touchLocation = gestureRecognizer.location(in: tableView)
+        dropBackIfNecessary(touchLocation: touchLocation)
+        
+        switch gestureRecognizer.state {
+        case .began, .changed:
+            selectRow(at: indexPath(forRowAtOffset: touchLocation))
+        case .ended:
+            
+            selectRow(at: nil)
+            self.fullSize()
+            
+            guard gestureRecognizer.velocity(in: tableView).magnitude < dragSensitivity, let indexPath = indexPath(forRowAtOffset: touchLocation) else {
+                return
+            }
+                
+            let cellRect = tableView.rectForRow(at: indexPath)
+            let cellPosition = CGPoint(x: cellRect.midX, y: cellRect.midY)
+            let positionInSuperview = tableView.convert(cellPosition, to: containingView)
+            
+            let menuItem = menuContent[indexPath.section][indexPath.row]
+            menuItemWasTapped(menuItem, position: positionInSuperview)
+            
+        default:
+            selectRow(at: nil)
+            self.fullSize()
+        }
+    }
+    
     private func menuItemWasTapped(_ menuItem: FWMenuItem, position: CGPoint) {
         
         guard !done else {
@@ -164,21 +171,32 @@ class MenuViewController: UIViewController {
         }
         if let indexPath = indexPath {
             tableView.selectRow(at: indexPath, animated: false, scrollPosition: .none)
+            if indexPath != selectedRow {
+                UIImpactFeedbackGenerator(style: .light).impactOccurred(intensity: 0.5)
+            }
         }
         
         selectedRow = indexPath
     }
     
-    private func indexPath(forRowAtOffset offset: CGFloat) -> IndexPath? {
+    private func indexPath(forRowAtOffset offset: CGPoint) -> IndexPath? {
         
         // don't know if there's a better way of finding the row for a particular y position, when there are varying row heights
         // in any case, this is super quick as it's just a binary search
+        
+        guard offset.x > 0 && offset.x < tableView.frame.width else {
+            return nil
+        }
         
         let tableHeight = tableView.contentSize.height
         let totalRows = menuContent.reduce(0) { $0 + $1.count }
         let sectionsCount = menuContent.count
         
-        var guess = Int(offset / tableHeight * CGFloat(totalRows))
+        guard tableHeight > 0, totalRows > 0 else {
+            return nil
+        }
+        
+        var guess = Int(offset.y / tableHeight * CGFloat(totalRows))
         var step = guess / 2
         var result: IndexPath?
         var finished = false
@@ -202,9 +220,9 @@ class MenuViewController: UIViewController {
             
             if let indexPath = indexPath, indexPath.row >= 0 {
                 let rowRect = tableView.rectForRow(at: indexPath).inset(by: UIEdgeInsets(top: indexPath.row == 0 ? -sectionHeaderHeight : 0, left: 0, bottom: 0, right: 0))
-                if offset < rowRect.minY {
+                if offset.y < rowRect.minY {
                     guess -= step
-                } else if offset > rowRect.maxY {
+                } else if offset.y > rowRect.maxY {
                     guess += step
                 } else {
                     result = indexPath
@@ -218,6 +236,33 @@ class MenuViewController: UIViewController {
         }
         
         return result
+    }
+    
+    private func dropBackIfNecessary(touchLocation: CGPoint) {
+        
+        let leeway: CGFloat = 25
+        
+        let leftX = -(min(touchLocation.x + leeway, 0))
+        let rightX = max(touchLocation.x - leeway - tableView.frame.maxX, 0)
+        let outsideX = max(leftX, rightX)
+        
+        let topY = -(min(touchLocation.y + leeway, 0))
+        let bottomY = max(touchLocation.y - leeway - tableView.frame.maxY, 0)
+        let outsideY = max(topY, bottomY)
+        
+        let outsideMagnitude = max(1 - CGPoint(x: outsideX, y: outsideY).magnitude / 600, 0.8)
+        
+        let transform = CGAffineTransform(scaleX: outsideMagnitude, y: outsideMagnitude)
+        
+        UIView.animate(withDuration: 0.1) {
+            self.view.transform = transform
+        }
+    }
+    
+    private func fullSize() {
+        UIView.animate(withDuration: 0.4, delay: 0, usingSpringWithDamping: 0.65, initialSpringVelocity: 2, options: .curveEaseInOut) {
+            self.view.transform = .identity
+        }
     }
 }
 

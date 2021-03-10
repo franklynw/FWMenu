@@ -17,7 +17,8 @@ public class MenuPresenter {
     public static func presentFromNavBar(parent: FWMenuPresenting, withRelativeX relativeX: CGFloat) {
         
         let screenSize = UIScreen.main.bounds.size
-        let buttonFrame = CGRect(origin: CGPoint(x: screenSize.width * relativeX, y: 40), size: CGSize(width: 10, height: 10))
+        let notchOffset: CGFloat = UIDevice.hasNotch ? 32 : 0
+        let buttonFrame = CGRect(origin: CGPoint(x: screenSize.width * relativeX, y: 40 + notchOffset), size: CGSize(width: 10, height: 10))
         
         present(parent: parent, with: buttonFrame)
     }
