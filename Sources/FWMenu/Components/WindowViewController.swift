@@ -35,7 +35,7 @@ class WindowViewController: UIViewController {
         
         isSetup = true
         
-        let menuViewController = showMenu(menuContent, parentMenu: nil, indexPath: nil)
+        let menuViewController = showMenu(menuContent, parentMenu: nil, section: nil)
         menuViewControllers.append(menuViewController)
         
         let panGestureRecognizer: UIPanGestureRecognizer = .gestureRecognizer(delegate: self) { [weak self] recognizer in
@@ -53,7 +53,7 @@ class WindowViewController: UIViewController {
 // MARK: - Private
 extension WindowViewController {
     
-    private func showSubMenu(from menu: MenuViewController, menuItem: FWMenuItem, indexPath: IndexPath, position: CGPoint) {
+    private func showSubMenu(from menu: MenuViewController, menuItem: FWMenuItem, section: Int, position: CGPoint) {
         
         guard let menuItems = getMenuContent(from: menuItem) else {
             return
@@ -65,7 +65,7 @@ extension WindowViewController {
             }
         } else {
             replace? { [weak self] _ in
-                if let menuViewController = self?.showMenu(menuItems, parentMenu: menu, indexPath: indexPath, position: position) {
+                if let menuViewController = self?.showMenu(menuItems, parentMenu: menu, section: section, position: position) {
                     self?.menuViewControllers.append(menuViewController)
                 }
             }
@@ -106,7 +106,7 @@ extension WindowViewController {
                 if index == 0 {
                     menuViewController.refreshContent(self.menuContent)
                     recalculateSize()
-                } else if let menuSectionIndex = menuViewController.index {
+                } else if let menuSectionIndex = menuViewController.sectionIndex {
                     
                     let menuItem = self.menuContent[index - 1][menuSectionIndex]
                     guard let menuItems = self.getMenuContent(from: menuItem) else {
@@ -122,20 +122,20 @@ extension WindowViewController {
         }
     }
     
-    private func showMenu(_ content: [[FWMenuItem]], parentMenu: MenuViewController?, indexPath: IndexPath?, position: CGPoint? = nil) -> MenuViewController {
+    private func showMenu(_ content: [[FWMenuItem]], parentMenu: MenuViewController?, section: Int?, position: CGPoint? = nil) -> MenuViewController {
         
         let menuViewController = UIStoryboard(name: "MenuViewController", bundle: .module).instantiateInitialViewController() as! MenuViewController
         
         menuViewController.containingView = view
         menuViewController.parentMenu = parentMenu
         menuViewController.menuContent = content
-        menuViewController.index = indexPath?.section
+        menuViewController.sectionIndex = section
         menuViewController.contentBackgroundColor = contentBackgroundColor
         menuViewController.accentColor = accentColor
         menuViewController.font = font
         
-        menuViewController.showSubmenu = { [weak self] menu, menuItem, indexPath, position in
-            self?.showSubMenu(from: menu, menuItem: menuItem, indexPath: indexPath, position: position)
+        menuViewController.showSubmenu = { [weak self] menu, menuItem, section, position in
+            self?.showSubMenu(from: menu, menuItem: menuItem, section: section, position: position)
         }
         
         menuViewController.finished = { [weak self] in

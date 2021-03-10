@@ -20,9 +20,9 @@ class MenuViewController: UIViewController {
     var contentBackgroundColor: Color?
     var accentColor: Color?
     var font: Font?
-    var index: Int?
+    var sectionIndex: Int?
     var isTopMenu = true
-    var showSubmenu: ((MenuViewController, FWMenuItem, IndexPath, CGPoint) -> ())!
+    var showSubmenu: ((MenuViewController, FWMenuItem, Int, CGPoint) -> ())!
     var finished: (() -> ())!
     
     private var selectedRow: IndexPath?
@@ -140,7 +140,7 @@ class MenuViewController: UIViewController {
             let positionInSuperview = tableView.convert(cellPosition, to: containingView)
             
             let menuItem = menuContent[indexPath.section][indexPath.row]
-            menuItemWasTapped(menuItem, indexPath: indexPath, position: positionInSuperview)
+            menuItemWasTapped(menuItem, section: indexPath.section, position: positionInSuperview)
             
         default:
             selectRow(at: nil)
@@ -163,7 +163,7 @@ class MenuViewController: UIViewController {
 // MARK: - Private
 extension MenuViewController {
     
-    private func menuItemWasTapped(_ menuItem: FWMenuItem, indexPath: IndexPath, position: CGPoint) {
+    private func menuItemWasTapped(_ menuItem: FWMenuItem, section: Int, position: CGPoint) {
         
         guard !done else {
             return
@@ -176,7 +176,7 @@ extension MenuViewController {
         }
         
         if menuItem.hasSubmenus {
-            showSubmenu(self, menuItem, indexPath, position)
+            showSubmenu(self, menuItem, section, position)
         } else {
             menuItem.action?()
             finished()
@@ -279,7 +279,9 @@ extension MenuViewController {
             self.view.transform = transform
         }
         
-        parentMenu?.transform(outsideMagnitude)
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) {
+            self.parentMenu?.transform(outsideMagnitude)
+        }
     }
     
     private func fullSize() {
@@ -288,7 +290,9 @@ extension MenuViewController {
             self.view.transform = .identity
         }
         
-        parentMenu?.fullSize()
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) {
+            self.parentMenu?.fullSize()
+        }
     }
     
     private func transform(_ scale: CGFloat) {
@@ -300,7 +304,9 @@ extension MenuViewController {
             self.view.transform = transform
         }
         
-        parentMenu?.transform(scale)
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) {
+            self.parentMenu?.transform(scale)
+        }
     }
 }
 
@@ -335,7 +341,7 @@ extension MenuViewController: UITableViewDelegate, UITableViewDataSource {
             let cellPosition = CGPoint(x: cellRect.midX, y: cellRect.midY)
             let positionInSuperview = tableView.convert(cellPosition, to: self?.containingView)
             
-            self?.menuItemWasTapped(menuItem, indexPath: indexPath, position: CGPoint(x: positionInSuperview.x, y: positionInSuperview.y - cellRect.height / 2))
+            self?.menuItemWasTapped(menuItem, section: indexPath.section, position: CGPoint(x: positionInSuperview.x, y: positionInSuperview.y - cellRect.height / 2))
         }
         
         let bgView = UIView()
