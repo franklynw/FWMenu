@@ -3,7 +3,7 @@ import SwiftUI
 
 public struct FWMenu<Label: View>: View, FWMenuPresenting {
     
-    public let content: [[FWMenuItem]]
+    public let content: () -> ([[FWMenuItem]])
     
     public var contentBackgroundColor: Color?
     public var contentAccentColor: Color?
@@ -33,87 +33,117 @@ public struct FWMenu<Label: View>: View, FWMenuPresenting {
     }
     
     
-    public init(label: Label, sections: [[FWMenuItem]]) {
+    public init(label: Label, sections: @escaping () -> ([[FWMenuItem]])) {
         self.label = label
-        content = sections.compactMap { ContentTidier.tidyMenuContent($0) }
+        content = { () -> [[FWMenuItem]] in
+            sections().compactMap { ContentTidier.tidyMenuContent($0) }
+        }
         text = nil
         image = nil
         title = nil
         imageName = nil
     }
     
-    public init(title: String, imageSystemName: String, sections: [[FWMenuItem]]) where Label == SwiftUI.Label<Text, AnyView> {
+    public init(title: String, imageSystemName: String, sections: @escaping () -> ([[FWMenuItem]])) where Label == SwiftUI.Label<Text, AnyView> {
         self.title = title
         self.imageName = imageSystemName
-        content = sections.compactMap { ContentTidier.tidyMenuContent($0) }
+        content = { () -> [[FWMenuItem]] in
+            sections().compactMap { ContentTidier.tidyMenuContent($0) }
+        }
         label = nil
         text = nil
         image = nil
     }
     
-    public init(title: String, image: Image, sections: [[FWMenuItem]]) where Label == SwiftUI.Label<Text, AnyView> {
+    public init(title: String, image: Image, sections: @escaping () -> ([[FWMenuItem]])) where Label == SwiftUI.Label<Text, AnyView> {
         self.title = title
         self.image = image
-        content = sections.compactMap { ContentTidier.tidyMenuContent($0) }
+        content = { () -> [[FWMenuItem]] in
+            sections().compactMap { ContentTidier.tidyMenuContent($0) }
+        }
         label = nil
         text = nil
         imageName = nil
     }
     
-    public init(title: String, sections: [[FWMenuItem]]) where Label == Text {
+    public init(title: String, sections: @escaping () -> ([[FWMenuItem]])) where Label == Text {
         self.title = title
-        content = sections.compactMap { ContentTidier.tidyMenuContent($0) }
+        content = { () -> [[FWMenuItem]] in
+            sections().compactMap { ContentTidier.tidyMenuContent($0) }
+        }
         label = nil
         text = nil
         image = nil
         imageName = nil
     }
     
-    public init(imageSystemName: String, sections: [[FWMenuItem]]) where Label == AnyView {
+    public init(imageSystemName: String, sections: @escaping () -> ([[FWMenuItem]])) where Label == AnyView {
         self.imageName = imageSystemName
-        content = sections.compactMap { ContentTidier.tidyMenuContent($0) }
+        content = { () -> [[FWMenuItem]] in
+            sections().compactMap { ContentTidier.tidyMenuContent($0) }
+        }
         title = nil
         label = nil
         text = nil
         image = nil
     }
     
-    public init(image: Image, sections: [[FWMenuItem]]) where Label == AnyView {
+    public init(image: Image, sections: @escaping () -> ([[FWMenuItem]])) where Label == AnyView {
         self.image = image
-        content = sections.compactMap { ContentTidier.tidyMenuContent($0) }
+        content = { () -> [[FWMenuItem]] in
+            sections().compactMap { ContentTidier.tidyMenuContent($0) }
+        }
         title = nil
         label = nil
         text = nil
         imageName = nil
     }
     
-    public init(label: Label, items: [FWMenuItem]) {
-        self.init(label: label, sections: [items])
+    public init(label: Label, items: @escaping () -> ([FWMenuItem])) {
+        let sections =  { () -> [[FWMenuItem]] in
+            [items()]
+        }
+        self.init(label: label, sections: sections)
     }
     
-    public init(title: String, imageSystemName: String, items: [FWMenuItem]) where Label == SwiftUI.Label<Text, AnyView> {
-        self.init(title: title, imageSystemName: imageSystemName, sections: [items])
+    public init(title: String, imageSystemName: String, items: @escaping () -> ([FWMenuItem])) where Label == SwiftUI.Label<Text, AnyView> {
+        let sections =  { () -> [[FWMenuItem]] in
+            [items()]
+        }
+        self.init(title: title, imageSystemName: imageSystemName, sections: sections)
     }
     
-    public init(title: String, image: Image, items: [FWMenuItem]) where Label == SwiftUI.Label<Text, AnyView> {
-        self.init(title: title, image: image, sections: [items])
+    public init(title: String, image: Image, items: @escaping () -> ([FWMenuItem])) where Label == SwiftUI.Label<Text, AnyView> {
+        let sections =  { () -> [[FWMenuItem]] in
+            [items()]
+        }
+        self.init(title: title, image: image, sections: sections)
     }
     
-    public init(title: String, items: [FWMenuItem]) where Label == Text {
-        self.init(title: title, sections: [items])
+    public init(title: String, items: @escaping () -> ([FWMenuItem])) where Label == Text {
+        let sections =  { () -> [[FWMenuItem]] in
+            [items()]
+        }
+        self.init(title: title, sections: sections)
     }
     
-    public init(imageSystemName: String, items: [FWMenuItem]) where Label == AnyView {
-        self.init(imageSystemName: imageSystemName, sections: [items])
+    public init(imageSystemName: String, items: @escaping () -> ([FWMenuItem])) where Label == AnyView {
+        let sections =  { () -> [[FWMenuItem]] in
+            [items()]
+        }
+        self.init(imageSystemName: imageSystemName, sections: sections)
     }
     
-    public init(image: Image, items: [FWMenuItem]) where Label == AnyView {
-        self.init(image: image, sections: [items])
+    public init(image: Image, items: @escaping () -> ([FWMenuItem])) where Label == AnyView {
+        let sections =  { () -> [[FWMenuItem]] in
+            [items()]
+        }
+        self.init(image: image, sections: sections)
     }
     
     public var body: some View {
         
-        if !content.isEmpty || !(hidePolicy == .hide) {
+        if !content().isEmpty || !(hidePolicy == .hide) {
             GeometryReader { geometry in
                 Button(
                     action: {
@@ -124,7 +154,7 @@ public struct FWMenu<Label: View>: View, FWMenuPresenting {
                     }
                 )
                 .frame(width: geometry.frame(in: .local).width, height: geometry.frame(in: .local).height)
-                .opacity(content.isEmpty ? hidePolicy.opacity : 1)
+                .opacity(content().isEmpty ? hidePolicy.opacity : 1)
             }
             .fixedSize()
         }

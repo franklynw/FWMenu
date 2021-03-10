@@ -39,7 +39,7 @@ public class MenuPresenter {
             let newWindow = UIWindow(windowScene: windowScene)
             
             let viewController = WindowViewController()
-            viewController.menuContent = parent.content
+            viewController.menuContent = parent.content()
             viewController.contentBackgroundColor = parent.contentBackgroundColor
             viewController.accentColor = parent.contentAccentColor
             viewController.font = parent.font

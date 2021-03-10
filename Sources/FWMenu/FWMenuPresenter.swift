@@ -12,7 +12,7 @@ public struct FWMenuPresenter: View, FWMenuPresenting {
     
     @Binding private var isPresented: Bool
     
-    public let content: [[FWMenuItem]]
+    public let content: () -> ([[FWMenuItem]])
     
     public var contentBackgroundColor: Color?
     public var contentAccentColor: Color?
@@ -21,15 +21,17 @@ public struct FWMenuPresenter: View, FWMenuPresenting {
     private let sourceRect: CGRect
 
     
-    public init(isPresented: Binding<Bool>, menuSections: [[FWMenuItem]], sourceRect: CGRect) {
+    public init(isPresented: Binding<Bool>, menuSections: @escaping () -> ([[FWMenuItem]]), sourceRect: CGRect) {
         _isPresented = isPresented
         content = menuSections
         self.sourceRect = sourceRect
     }
     
-    public init(isPresented: Binding<Bool>, menuItems: [FWMenuItem], sourceRect: CGRect) {
+    public init(isPresented: Binding<Bool>, menuItems: @escaping () -> ([FWMenuItem]), sourceRect: CGRect) {
         _isPresented = isPresented
-        content = [menuItems]
+        content = { () -> [[FWMenuItem]] in
+            return [menuItems()]
+        }
         self.sourceRect = sourceRect
     }
     
