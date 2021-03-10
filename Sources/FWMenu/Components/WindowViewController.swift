@@ -35,8 +35,13 @@ class WindowViewController: UIViewController {
         
         isSetup = true
         
-        let menuViewController = showMenu(menuContent, indexPath: nil)
+        let menuViewController = showMenu(menuContent, parentMenu: nil, indexPath: nil)
         menuViewControllers.append(menuViewController)
+        
+        let panGestureRecognizer: UIPanGestureRecognizer = .gestureRecognizer(delegate: self) { [weak self] recognizer in
+            self?.menuViewControllers.last?.userPanned(recognizer)
+        }
+        view.addGestureRecognizer(panGestureRecognizer)
     }
     
     func dismissMenu(completion: ((Bool) -> ())? = nil) {
@@ -48,15 +53,21 @@ class WindowViewController: UIViewController {
 // MARK: - Private
 extension WindowViewController {
     
-    private func showSubMenu(from menuItem: FWMenuItem, indexPath: IndexPath, position: CGPoint) {
+    private func showSubMenu(from menu: MenuViewController, menuItem: FWMenuItem, indexPath: IndexPath, position: CGPoint) {
         
         guard let menuItems = getMenuContent(from: menuItem) else {
             return
         }
         
-        replace? { [weak self] _ in
-            if let menuViewController = self?.showMenu(menuItems, indexPath: indexPath, position: position) {
-                self?.menuViewControllers.append(menuViewController)
+        if !menu.isTopMenu {
+            removeTopMenu { [weak self] _ in
+                self?.menuViewControllers.last?.isTopMenu = true
+            }
+        } else {
+            replace? { [weak self] _ in
+                if let menuViewController = self?.showMenu(menuItems, parentMenu: menu, indexPath: indexPath, position: position) {
+                    self?.menuViewControllers.append(menuViewController)
+                }
             }
         }
     }
@@ -111,19 +122,20 @@ extension WindowViewController {
         }
     }
     
-    private func showMenu(_ content: [[FWMenuItem]], indexPath: IndexPath?, position: CGPoint? = nil) -> MenuViewController {
+    private func showMenu(_ content: [[FWMenuItem]], parentMenu: MenuViewController?, indexPath: IndexPath?, position: CGPoint? = nil) -> MenuViewController {
         
         let menuViewController = UIStoryboard(name: "MenuViewController", bundle: .module).instantiateInitialViewController() as! MenuViewController
         
         menuViewController.containingView = view
+        menuViewController.parentMenu = parentMenu
         menuViewController.menuContent = content
         menuViewController.index = indexPath?.section
         menuViewController.contentBackgroundColor = contentBackgroundColor
         menuViewController.accentColor = accentColor
         menuViewController.font = font
         
-        menuViewController.showSubmenu = { [weak self] menuItem, indexPath, position in
-            self?.showSubMenu(from: menuItem, indexPath: indexPath, position: position)
+        menuViewController.showSubmenu = { [weak self] menu, menuItem, indexPath, position in
+            self?.showSubMenu(from: menu, menuItem: menuItem, indexPath: indexPath, position: position)
         }
         
         menuViewController.finished = { [weak self] in
@@ -241,11 +253,6 @@ extension WindowViewController {
                 return
             }
         }
-        
-        let panGestureRecognizer: UIPanGestureRecognizer = .gestureRecognizer(delegate: self) { recognizer in
-            menuViewController.userPanned(recognizer)
-        }
-        view.addGestureRecognizer(panGestureRecognizer)
         
         return menuViewController
     }

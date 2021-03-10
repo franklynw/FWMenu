@@ -14,6 +14,7 @@ class MenuViewController: UIViewController {
     @IBOutlet weak var tableView: UITableView!
     
     weak var containingView: UIView?
+    weak var parentMenu: MenuViewController?
     
     var menuContent: [[FWMenuItem]] = [[]]
     var contentBackgroundColor: Color?
@@ -21,7 +22,7 @@ class MenuViewController: UIViewController {
     var font: Font?
     var index: Int?
     var isTopMenu = true
-    var showSubmenu: ((FWMenuItem, IndexPath, CGPoint) -> ())!
+    var showSubmenu: ((MenuViewController, FWMenuItem, IndexPath, CGPoint) -> ())!
     var finished: (() -> ())!
     
     private var selectedRow: IndexPath?
@@ -116,8 +117,8 @@ class MenuViewController: UIViewController {
             return
         }
         
-        let touchLocation = gestureRecognizer.location(in: tableView)
-        dropBackIfNecessary(touchLocation: touchLocation)
+        let touchLocation = gestureRecognizer.location(in: view)
+        dropBackIfNecessary(touchLocation: gestureRecognizer.location(in: containingView))
         
         switch gestureRecognizer.state {
         case .began, .changed:
@@ -169,14 +170,19 @@ extension MenuViewController {
         }
         
         done = true
-        isTopMenu = false
+        
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+            self.done = false
+        }
         
         if menuItem.hasSubmenus {
-            showSubmenu(menuItem, indexPath, position)
+            showSubmenu(self, menuItem, indexPath, position)
         } else {
             menuItem.action?()
             finished()
         }
+        
+        isTopMenu = false
     }
     
     private func selectRow(at indexPath: IndexPath?) {
@@ -255,18 +261,14 @@ extension MenuViewController {
     
     private func dropBackIfNecessary(touchLocation: CGPoint) {
         
-        guard isTopMenu else {
-            return
-        }
-        
         let leeway: CGFloat = 25
         
-        let leftX = -(min(touchLocation.x + leeway, 0))
-        let rightX = max(touchLocation.x - leeway - tableView.frame.maxX, 0)
+        let leftX = max(view.frame.minX - leeway - touchLocation.x, 0)
+        let rightX = max(touchLocation.x - leeway - view.frame.maxX, 0)
         let outsideX = max(leftX, rightX)
         
-        let topY = -(min(touchLocation.y + leeway, 0))
-        let bottomY = max(touchLocation.y - leeway - tableView.frame.maxY, 0)
+        let topY = max(view.frame.minY - leeway - touchLocation.y, 0)
+        let bottomY = max(touchLocation.y - leeway - view.frame.maxY, 0)
         let outsideY = max(topY, bottomY)
         
         let outsideMagnitude = max(1 - CGPoint(x: outsideX, y: outsideY).magnitude / 600, 0.8)
@@ -276,12 +278,29 @@ extension MenuViewController {
         UIView.animate(withDuration: 0.1) {
             self.view.transform = transform
         }
+        
+        parentMenu?.transform(outsideMagnitude)
     }
     
     private func fullSize() {
+        
         UIView.animate(withDuration: 0.4, delay: 0, usingSpringWithDamping: 0.65, initialSpringVelocity: 2, options: .curveEaseInOut) {
             self.view.transform = .identity
         }
+        
+        parentMenu?.fullSize()
+    }
+    
+    private func transform(_ scale: CGFloat) {
+        
+        let scale = pow(scale, 1.5)
+        let transform = CGAffineTransform(scaleX: scale, y: scale)
+        
+        UIView.animate(withDuration: 0.1) {
+            self.view.transform = transform
+        }
+        
+        parentMenu?.transform(scale)
     }
 }
 
@@ -339,9 +358,6 @@ extension MenuViewController: UITableViewDelegate, UITableViewDataSource {
     }
     
     func tableView(_ tableView: UITableView, heightForHeaderInSection section: Int) -> CGFloat {
-        if section == 0 {
-            return 0
-        }
-        return sectionHeaderHeight
+        return section == 0 ? 0 : sectionHeaderHeight
     }
 }
