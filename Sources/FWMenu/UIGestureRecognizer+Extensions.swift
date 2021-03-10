@@ -21,10 +21,12 @@ extension UIGestureRecognizer {
         }
     }
     
-    class func gestureRecognizer<T: UIGestureRecognizer>(delegate: UIGestureRecognizerDelegate? = nil, action: @escaping (UIGestureRecognizer) -> ()) -> T {
+    class func gestureRecognizer<T: UIGestureRecognizer>(delegate: UIGestureRecognizerDelegate? = nil, action: @escaping (T) -> ()) -> T {
         
         let gestureRecognizer = T(target: self, action: #selector(userDidGesture))
-        gestureRecognizer._action = action
+        gestureRecognizer._action = { recognizer in
+            action(recognizer as! T)
+        }
         gestureRecognizer.delegate = delegate
         
         return gestureRecognizer

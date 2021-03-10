@@ -1,5 +1,5 @@
 //
-//  UIApplication+Helpers.swift
+//  UIApplication+Extensions.swift
 //  
 //
 //  Created by Franklyn Weber on 08/03/2021.

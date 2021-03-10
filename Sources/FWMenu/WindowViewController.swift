@@ -1,85 +1,16 @@
 //
-//  Presenter.swift
+//  WindowViewController.swift
 //  
 //
-//  Created by Franklyn Weber on 08/03/2021.
+//  Created by Franklyn Weber on 09/03/2021.
 //
 
 import SwiftUI
 
 
-class Presenter {
-    
-    private static var window: UIWindow?
-    private static var viewController: WindowViewController?
-    
-    
-    static func present<Label: View>(parent: FWMenu<Label>, with buttonFrame: CGRect) {
-        
-        guard let appWindow = UIApplication.window else {
-            return
-        }
-        guard window == nil else {
-            return
-        }
-        
-        UIApplication.endEditing()
-        
-        if let windowScene = appWindow.windowScene {
-            
-            let newWindow = UIWindow(windowScene: windowScene)
-            
-            let viewController = WindowViewController()
-            viewController.menuContent = parent.content
-            viewController.contentBackgroundColor = parent.contentBackgroundColor
-            viewController.accentColor = parent.contentAccentColor
-            viewController.font = parent.font
-            viewController.menuButtonFrame = buttonFrame
-            viewController.finished = dismiss
-            viewController.view.backgroundColor = .clear
-            
-            let tapGesture: UITapGestureRecognizer = .gestureRecognizer { _ in
-                dismiss()
-            }
-            
-            viewController.view.addGestureRecognizer(tapGesture)
-            
-            newWindow.rootViewController = viewController
-            
-            self.viewController = viewController
-            
-            window = newWindow
-            window?.alpha = 0
-            window?.makeKeyAndVisible()
-            
-            UIView.animate(withDuration: 0.3) {
-                window?.alpha = 1
-                viewController.viewWillAppear(true)
-            }
-        }
-    }
-    
-    static func dismiss() {
-        
-        guard window != nil else {
-            return
-        }
-        
-        viewController?.dismissMenu() { _ in
-            
-            UIView.animate(withDuration: 0.3) {
-                window?.alpha = 0
-                viewController?.view.alpha = 0
-            } completion: { _ in
-                window = nil
-                viewController = nil
-            }
-        }
-    }
-}
-
-
 class WindowViewController: UIViewController {
+    
+    static let menuPadding: CGFloat = 8
     
     var menuContent: [[FWMenuItem]]!
     var menuButtonFrame: CGRect!
@@ -141,9 +72,10 @@ class WindowViewController: UIViewController {
         
         let menuSize = menuViewController.menuSize
         let screenSize = UIScreen.main.bounds.size
-        let menuPadding: CGFloat = 8
+        let menuPadding = Self.menuPadding
+        let topPadding = menuPadding * (UIDevice.hasNotch ? 5 : 3)
         
-        let availableTopSpace = menuButtonFrame.minY - menuPadding * 2
+        let availableTopSpace = menuButtonFrame.minY - topPadding
         let availableBottomSpace = screenSize.height - menuButtonFrame.maxY - menuPadding * 2
         let availableLeftSpace = menuButtonFrame.minX - menuPadding * 2
         let availableRightSpace = screenSize.width - menuButtonFrame.maxX - menuPadding * 2
@@ -163,20 +95,20 @@ class WindowViewController: UIViewController {
             height = menuSize.height
         } else if menuSize.width <= availableLeftSpace, availableLeftSpace >= availableRightSpace { // to the left of the button
             x = menuButtonFrame.minX - menuSize.width - menuPadding
-            y = min(screenSize.height - menuSize.height - menuPadding, menuButtonFrame.minY)
-            height = min(menuSize.height, screenSize.height - menuPadding * 2)
+            y = max(min(screenSize.height - menuSize.height - menuPadding, menuButtonFrame.minY), topPadding)
+            height = min(menuSize.height, screenSize.height - menuPadding - topPadding)
         } else if menuSize.width <= availableRightSpace, availableRightSpace > availableLeftSpace { // to the right of the button
             x = menuButtonFrame.maxX + menuPadding
-            y = min(screenSize.height - menuSize.height - menuPadding, menuButtonFrame.minY)
-            height = min(menuSize.height, screenSize.height - menuPadding * 2)
+            y = max(min(screenSize.height - menuSize.height - menuPadding, menuButtonFrame.minY), topPadding)
+            height = min(menuSize.height, screenSize.height - menuPadding - topPadding)
         } else if availableTopSpace > availableBottomSpace { // above the button, but reduce the menu height
             x = min(max(menuButtonFrame.maxX - menuSize.width, menuPadding), screenSize.width - menuSize.width - menuPadding)
-            y = menuButtonFrame.minY - menuSize.height - menuPadding
+            y = max(menuButtonFrame.minY - menuSize.height - menuPadding, topPadding)
             height = availableTopSpace
         } else { // below the button, but reduce the menu height
             x = min(max(menuButtonFrame.maxX - menuSize.width, menuPadding), screenSize.width - menuSize.width - menuPadding)
             y = menuButtonFrame.maxY + menuPadding * 2
-            height = availableBottomSpace
+            height = availableBottomSpace - menuPadding
         }
         
         menuViewController.view.frame = CGRect(origin: CGPoint(x: x, y: y), size: CGSize(width: menuSize.width, height: height))
@@ -241,6 +173,11 @@ class WindowViewController: UIViewController {
             })
         }
         
+        let panGestureRecognizer: UIPanGestureRecognizer = .gestureRecognizer(delegate: self) { recognizer in
+            menuViewController.userPanned(recognizer)
+        }
+        view.addGestureRecognizer(panGestureRecognizer)
+        
         return menuViewController
     }
     
@@ -248,5 +185,13 @@ class WindowViewController: UIViewController {
         viewController?.willMove(toParent: nil)
         viewController?.view.removeFromSuperview()
         viewController?.removeFromParent()
+    }
+}
+
+
+extension WindowViewController: UIGestureRecognizerDelegate {
+    
+    func gestureRecognizer(_ gestureRecognizer: UIGestureRecognizer, shouldRecognizeSimultaneouslyWith otherGestureRecognizer: UIGestureRecognizer) -> Bool {
+        return true
     }
 }
