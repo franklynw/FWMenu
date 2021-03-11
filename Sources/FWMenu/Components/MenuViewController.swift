@@ -122,10 +122,14 @@ class MenuViewController: UIViewController {
         
         switch gestureRecognizer.state {
         case .began, .changed:
+            guard let indexPath = indexPath(forRowAtOffset: touchLocation) else {
+                finished()
+                return
+            }
             guard !isScrollingEnabled else {
                 return
             }
-            selectRow(at: indexPath(forRowAtOffset: touchLocation))
+            selectRow(at: indexPath)
         case .ended:
             
             selectRow(at: nil)
@@ -335,13 +339,17 @@ extension MenuViewController: UITableViewDelegate, UITableViewDataSource {
         }
         
         let menuItem = menuContent[indexPath.section][indexPath.row]
-        cell.configure(with: menuItem, accentColor: accentColor, font: font, rowPosition: rowPosition, containingView: containingView) { [weak self] in
+        cell.configure(with: menuItem, accentColor: accentColor, font: font, rowPosition: rowPosition, containingView: containingView) { [weak self, weak tableView] in
+            
+            guard let self = self, let tableView = tableView else {
+                return
+            }
             
             let cellRect = tableView.rectForRow(at: indexPath)
             let cellPosition = CGPoint(x: cellRect.midX, y: cellRect.midY)
-            let positionInSuperview = tableView.convert(cellPosition, to: self?.containingView)
+            let positionInSuperview = tableView.convert(cellPosition, to: self.containingView)
             
-            self?.menuItemWasTapped(menuItem, section: indexPath.section, position: CGPoint(x: positionInSuperview.x, y: positionInSuperview.y - cellRect.height / 2))
+            self.menuItemWasTapped(menuItem, section: indexPath.section, position: CGPoint(x: positionInSuperview.x, y: positionInSuperview.y - cellRect.height / 2))
         }
         
         let bgView = UIView()

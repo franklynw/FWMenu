@@ -39,10 +39,7 @@ public class MenuPresenter {
         guard window == nil else {
             return
         }
-        
-        let content = parent.content()
-        
-        guard !content.isEmpty else {
+        guard !parent.content().isEmpty else {
             return
         }
         
@@ -53,15 +50,13 @@ public class MenuPresenter {
             let newWindow = UIWindow(windowScene: windowScene)
             
             let viewController = WindowViewController()
-            viewController.menuContent = content
+            viewController.menuContent = parent.content
             viewController.menuType = parent.menuType
             viewController.contentBackgroundColor = parent.contentBackgroundColor
             viewController.accentColor = parent.contentAccentColor
             viewController.font = parent.font
+            viewController.hideMenuOnDeviceRotation = parent.hideMenuOnDeviceRotation
             viewController.menuButtonFrame = buttonFrame
-            viewController.updateContent = {
-                viewController.menuContent = parent.content()
-            }
             viewController.finished = dismiss
             viewController.view.backgroundColor = .clear
             

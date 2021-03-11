@@ -50,6 +50,13 @@ extension FWMenu {
         return copy
     }
     
+    /// Set this if the menus don't rotate nicely, as support for device rotation hasn't been added yet
+    public var dismissOnDeviceRotation: Self {
+        var copy = self
+        copy.hideMenuOnDeviceRotation = true
+        return copy
+    }
+    
     /// Turns the menu into a settings menu, where each new menu is presented above the current menu, and content is updated when the data model changes
     /// NB - this is currently in an early development stage, and will only work properly if the underlying data structure of the menus is unaltered when items are selected
     /// It's fine to update menu item values, but not their content (ie, sub-menus) - behaviour here is undefined and will probably crash

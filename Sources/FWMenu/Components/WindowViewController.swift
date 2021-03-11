@@ -12,19 +12,42 @@ class WindowViewController: UIViewController {
     
     static let menuPadding: CGFloat = 8
     
-    var menuContent: [[FWMenuItem]]!
+    var menuContent: (() -> [[FWMenuItem]])!
     var menuButtonFrame: CGRect!
     var menuType: FWMenuType!
     var contentBackgroundColor: Color?
     var accentColor: Color?
     var font: Font?
+    var hideMenuOnDeviceRotation = false
     var finished: (() -> ())!
     var dismiss: ((((Bool) -> ())?) -> ())?
     var replace: ((((Bool) -> ())?) -> ())?
-    var updateContent: (() -> ())?
     
     private var menuViewControllers: [MenuViewController] = []
     private var isSetup = false
+    private var deviceOrientation = UIDevice.current.orientation
+    private var orientationObserver: NSObjectProtocol?
+    
+    
+    deinit {
+        if let orientationObserver = orientationObserver {
+            NotificationCenter.default.removeObserver(orientationObserver)
+        }
+    }
+    
+    override func viewDidLoad() {
+        super.viewDidLoad()
+        
+        orientationObserver = NotificationCenter.default.addObserver(forName: UIDevice.orientationDidChangeNotification, object: nil, queue: nil) { [weak self] _ in
+            guard let self = self, self.hideMenuOnDeviceRotation else {
+                return
+            }
+            if !UIDevice.current.orientation.isAspectEqual(to: self.deviceOrientation) {
+                self.deviceOrientation = UIDevice.current.orientation
+                self.dismiss?(nil)
+            }
+        }
+    }
     
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
@@ -35,7 +58,7 @@ class WindowViewController: UIViewController {
         
         isSetup = true
         
-        let menuViewController = showMenu(menuContent, parentMenu: nil, section: nil)
+        let menuViewController = showMenu(menuContent(), parentMenu: nil, section: nil)
         menuViewControllers.append(menuViewController)
         
         let panGestureRecognizer: UIPanGestureRecognizer = .gestureRecognizer(delegate: self) { [weak self] recognizer in
@@ -45,7 +68,10 @@ class WindowViewController: UIViewController {
     }
     
     func dismissMenu(completion: ((Bool) -> ())? = nil) {
-        dismiss?(completion)
+        dismiss? { [weak self] finished in
+            self?.menuViewControllers.removeAll()
+            completion?(finished)
+        }
     }
 }
 
@@ -80,7 +106,6 @@ extension WindowViewController {
                 return
             }
             
-            self.updateContent?()
             self.menuViewControllers.enumerated().forEach {
                 
                 let index = $0.offset
@@ -104,11 +129,11 @@ extension WindowViewController {
                 }
                 
                 if index == 0 {
-                    menuViewController.refreshContent(self.menuContent)
+                    menuViewController.refreshContent(self.menuContent())
                     recalculateSize()
                 } else if let menuSectionIndex = menuViewController.sectionIndex {
                     
-                    let menuItem = self.menuContent[index - 1][menuSectionIndex]
+                    let menuItem = self.menuContent()[index - 1][menuSectionIndex]
                     guard let menuItems = self.getMenuContent(from: menuItem) else {
                         return
                     }
@@ -281,7 +306,6 @@ extension WindowViewController {
             completion?(finished)
         })
         UIView.animate(withDuration: 0.3, animations: {
-            viewController.view.alpha = 0
             viewController.view.transform = CGAffineTransform(scaleX: 0.01, y: 0.01)
         }, completion: { finished in
             self.removeViewController(viewController)
@@ -301,5 +325,19 @@ extension WindowViewController: UIGestureRecognizerDelegate {
     
     func gestureRecognizer(_ gestureRecognizer: UIGestureRecognizer, shouldRecognizeSimultaneouslyWith otherGestureRecognizer: UIGestureRecognizer) -> Bool {
         return true
+    }
+}
+
+
+fileprivate extension UIDeviceOrientation {
+    
+    func isAspectEqual(to orientation: UIDeviceOrientation) -> Bool {
+        
+        switch (self.isLandscape, orientation.isLandscape) {
+        case (true, true), (false, false):
+            return true
+        default:
+            return false
+        }
     }
 }

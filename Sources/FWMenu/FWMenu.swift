@@ -21,6 +21,7 @@ public struct FWMenu<Label: View>: View, FWMenuPresenting {
     public var contentBackgroundColor: Color?
     public var contentAccentColor: Color?
     public var font: Font?
+    public var hideMenuOnDeviceRotation = false
     
     var accentColor: Color?
     var hidePolicy: HidePolicy = .alwaysShow
