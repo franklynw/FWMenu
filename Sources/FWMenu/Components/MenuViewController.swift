@@ -14,12 +14,15 @@ class MenuViewController: UIViewController {
     @IBOutlet weak var tableView: UITableView!
     
     weak var containingView: UIView?
+    weak var parentMenu: MenuViewController?
     
     var menuContent: [[FWMenuItem]] = [[]]
     var contentBackgroundColor: Color?
     var accentColor: Color?
     var font: Font?
-    var showSubmenu: ((FWMenuItem, CGPoint) -> ())!
+    var sectionIndex: Int?
+    var isTopMenu = true
+    var showSubmenu: ((MenuViewController, FWMenuItem, Int, CGPoint) -> ())!
     var finished: (() -> ())!
     
     private var selectedRow: IndexPath?
@@ -85,12 +88,6 @@ class MenuViewController: UIViewController {
                     additionalPadding = rowPadding + 42
                 }
                 
-//                let label = UILabel()
-//                label.text = $1.name
-//                label.font = .systemFont(ofSize: 17)
-//                label.numberOfLines = 0
-//                let size = label.sizeThatFits(CGSize(width: maxTextWidth, height: .greatestFiniteMagnitude))
-                
                 let size = $1.name.boundingRect(with: CGSize(width: maxTextWidth, height: .greatestFiniteMagnitude), options: .usesLineFragmentOrigin, attributes: [NSAttributedString.Key.font : UIFont.systemFont(ofSize: 17)], context: nil).size
                 let height = size.height + 22.5
                 
@@ -116,22 +113,29 @@ class MenuViewController: UIViewController {
     
     func userPanned(_ gestureRecognizer: UIPanGestureRecognizer) {
         
-        guard !isScrollingEnabled else {
+        guard isTopMenu else {
             return
         }
         
-        let touchLocation = gestureRecognizer.location(in: tableView)
-        dropBackIfNecessary(touchLocation: touchLocation)
+        let touchLocation = gestureRecognizer.location(in: view)
+        dropBackIfNecessary(touchLocation: gestureRecognizer.location(in: containingView))
         
         switch gestureRecognizer.state {
         case .began, .changed:
-            selectRow(at: indexPath(forRowAtOffset: touchLocation))
+            guard let indexPath = indexPath(forRowAtOffset: touchLocation) else {
+                finished()
+                return
+            }
+            guard !isScrollingEnabled else {
+                return
+            }
+            selectRow(at: indexPath)
         case .ended:
             
             selectRow(at: nil)
             self.fullSize()
             
-            guard gestureRecognizer.velocity(in: tableView).magnitude < dragSensitivity, let indexPath = indexPath(forRowAtOffset: touchLocation) else {
+            guard !isScrollingEnabled, gestureRecognizer.velocity(in: tableView).magnitude < dragSensitivity, let indexPath = indexPath(forRowAtOffset: touchLocation) else {
                 return
             }
                 
@@ -140,7 +144,7 @@ class MenuViewController: UIViewController {
             let positionInSuperview = tableView.convert(cellPosition, to: containingView)
             
             let menuItem = menuContent[indexPath.section][indexPath.row]
-            menuItemWasTapped(menuItem, position: positionInSuperview)
+            menuItemWasTapped(menuItem, section: indexPath.section, position: positionInSuperview)
             
         default:
             selectRow(at: nil)
@@ -148,7 +152,22 @@ class MenuViewController: UIViewController {
         }
     }
     
-    private func menuItemWasTapped(_ menuItem: FWMenuItem, position: CGPoint) {
+    func refreshContent(_ content: [[FWMenuItem]]) {
+        
+        menuContent = content
+        done = false
+        
+        UIView.transition(with: tableView, duration: 0.3, options: .transitionCrossDissolve) {
+            self.tableView.reloadData()
+        }
+    }
+}
+
+
+// MARK: - Private
+extension MenuViewController {
+    
+    private func menuItemWasTapped(_ menuItem: FWMenuItem, section: Int, position: CGPoint) {
         
         guard !done else {
             return
@@ -156,12 +175,18 @@ class MenuViewController: UIViewController {
         
         done = true
         
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+            self.done = false
+        }
+        
         if menuItem.hasSubmenus {
-            showSubmenu(menuItem, position)
+            showSubmenu(self, menuItem, section, position)
         } else {
             menuItem.action?()
             finished()
         }
+        
+        isTopMenu = false
     }
     
     private func selectRow(at indexPath: IndexPath?) {
@@ -242,12 +267,12 @@ class MenuViewController: UIViewController {
         
         let leeway: CGFloat = 25
         
-        let leftX = -(min(touchLocation.x + leeway, 0))
-        let rightX = max(touchLocation.x - leeway - tableView.frame.maxX, 0)
+        let leftX = max(view.frame.minX - leeway - touchLocation.x, 0)
+        let rightX = max(touchLocation.x - leeway - view.frame.maxX, 0)
         let outsideX = max(leftX, rightX)
         
-        let topY = -(min(touchLocation.y + leeway, 0))
-        let bottomY = max(touchLocation.y - leeway - tableView.frame.maxY, 0)
+        let topY = max(view.frame.minY - leeway - touchLocation.y, 0)
+        let bottomY = max(touchLocation.y - leeway - view.frame.maxY, 0)
         let outsideY = max(topY, bottomY)
         
         let outsideMagnitude = max(1 - CGPoint(x: outsideX, y: outsideY).magnitude / 600, 0.8)
@@ -257,16 +282,40 @@ class MenuViewController: UIViewController {
         UIView.animate(withDuration: 0.1) {
             self.view.transform = transform
         }
+        
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) {
+            self.parentMenu?.transform(outsideMagnitude)
+        }
     }
     
     private func fullSize() {
+        
         UIView.animate(withDuration: 0.4, delay: 0, usingSpringWithDamping: 0.65, initialSpringVelocity: 2, options: .curveEaseInOut) {
             self.view.transform = .identity
+        }
+        
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) {
+            self.parentMenu?.fullSize()
+        }
+    }
+    
+    private func transform(_ scale: CGFloat) {
+        
+        let scale = pow(scale, 1.5)
+        let transform = CGAffineTransform(scaleX: scale, y: scale)
+        
+        UIView.animate(withDuration: 0.1) {
+            self.view.transform = transform
+        }
+        
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) {
+            self.parentMenu?.transform(scale)
         }
     }
 }
 
 
+// MARK: - UITableViewDelegate, UITableViewDataSource
 extension MenuViewController: UITableViewDelegate, UITableViewDataSource {
     
     func numberOfSections(in tableView: UITableView) -> Int {
@@ -290,13 +339,17 @@ extension MenuViewController: UITableViewDelegate, UITableViewDataSource {
         }
         
         let menuItem = menuContent[indexPath.section][indexPath.row]
-        cell.configure(with: menuItem, accentColor: accentColor, font: font, rowPosition: rowPosition, containingView: containingView) { [weak self] in
+        cell.configure(with: menuItem, accentColor: accentColor, font: font, rowPosition: rowPosition, containingView: containingView) { [weak self, weak tableView] in
+            
+            guard let self = self, let tableView = tableView else {
+                return
+            }
             
             let cellRect = tableView.rectForRow(at: indexPath)
             let cellPosition = CGPoint(x: cellRect.midX, y: cellRect.midY)
-            let positionInSuperview = tableView.convert(cellPosition, to: self?.containingView)
+            let positionInSuperview = tableView.convert(cellPosition, to: self.containingView)
             
-            self?.menuItemWasTapped(menuItem, position: CGPoint(x: positionInSuperview.x, y: positionInSuperview.y - cellRect.height / 2))
+            self.menuItemWasTapped(menuItem, section: indexPath.section, position: CGPoint(x: positionInSuperview.x, y: positionInSuperview.y - cellRect.height / 2))
         }
         
         let bgView = UIView()
@@ -319,17 +372,6 @@ extension MenuViewController: UITableViewDelegate, UITableViewDataSource {
     }
     
     func tableView(_ tableView: UITableView, heightForHeaderInSection section: Int) -> CGFloat {
-        if section == 0 {
-            return 0
-        }
-        return sectionHeaderHeight
-    }
-}
-
-
-extension MenuViewController: UIGestureRecognizerDelegate {
-    
-    func gestureRecognizer(_ gestureRecognizer: UIGestureRecognizer, shouldRecognizeSimultaneouslyWith otherGestureRecognizer: UIGestureRecognizer) -> Bool {
-        return true
+        return section == 0 ? 0 : sectionHeaderHeight
     }
 }

@@ -17,17 +17,18 @@ public struct FWMenuPresenter: View, FWMenuPresenting {
     public var contentBackgroundColor: Color?
     public var contentAccentColor: Color?
     public var font: Font?
+    public var hideMenuOnDeviceRotation = false
 
-    private let sourceRect: CGRect
+    private let sourceRect: CGRect?
 
     
-    public init(isPresented: Binding<Bool>, menuSections: @escaping () -> ([[FWMenuItem]]), sourceRect: CGRect) {
+    public init(isPresented: Binding<Bool>, menuSections: @escaping () -> ([[FWMenuItem]]), sourceRect: CGRect? = nil) {
         _isPresented = isPresented
         content = menuSections
         self.sourceRect = sourceRect
     }
     
-    public init(isPresented: Binding<Bool>, menuItems: @escaping () -> ([FWMenuItem]), sourceRect: CGRect) {
+    public init(isPresented: Binding<Bool>, menuItems: @escaping () -> ([FWMenuItem]), sourceRect: CGRect? = nil) {
         _isPresented = isPresented
         content = { () -> [[FWMenuItem]] in
             return [menuItems()]
@@ -42,27 +43,5 @@ public struct FWMenuPresenter: View, FWMenuPresenting {
             MenuPresenter.present(parent: self, with: sourceRect)
             isPresented = false
         }
-    }
-}
-
-
-extension FWMenuPresenter {
-    
-    public func contentBackgroundColor(_ contentBackgroundColor: Color) -> Self {
-        var copy = self
-        copy.contentBackgroundColor = contentBackgroundColor
-        return copy
-    }
-    
-    public func contentAccentColor(_ contentAccentColor: Color) -> Self {
-        var copy = self
-        copy.contentAccentColor = contentAccentColor
-        return copy
-    }
-    
-    public func font(_ font: Font) -> Self {
-        var copy = self
-        copy.font = font
-        return copy
     }
 }

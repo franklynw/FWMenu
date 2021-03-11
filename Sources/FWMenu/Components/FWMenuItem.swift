@@ -9,6 +9,15 @@ import SwiftUI
 
 
 public struct FWMenuItem {
+    
+    /*
+     Struct for defining menu items in a FWMenu
+     
+     It can be initialised as a standard menu item, with text, icon and action, or as an item with a sub-menu (with only the title definable)
+     Each menu item can be styled using the Style enum, which allows customisation of text & background colour, & font
+     The style setting for a menu item will override the global setting for the menu
+     */
+    
     let name: String
     let image: UIImage?
     let style: Style

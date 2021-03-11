@@ -14,6 +14,10 @@ public class MenuPresenter {
     private static var viewController: WindowViewController?
     
     
+    /// Presents a menu from the NavBar region, with a specified offset
+    /// - Parameters:
+    ///   - parent: a model which conforms to FWMenuPresenting
+    ///   - relativeX: the x position of the menu, relatvie to the screen width
     public static func presentFromNavBar(parent: FWMenuPresenting, withRelativeX relativeX: CGFloat) {
         
         let screenSize = UIScreen.main.bounds.size
@@ -23,12 +27,19 @@ public class MenuPresenter {
         present(parent: parent, with: buttonFrame)
     }
     
-    public static func present(parent: FWMenuPresenting, with buttonFrame: CGRect) {
+    /// Presents a menu from the provided button frame
+    /// - Parameters:
+    ///   - parent: a model which conforms to FWMenuPresenting
+    ///   - buttonFrame: the frame of the button (or anything) which will serve as the anchor for the menu
+    public static func present(parent: FWMenuPresenting, with buttonFrame: CGRect?) {
         
         guard let appWindow = UIApplication.window else {
             return
         }
         guard window == nil else {
+            return
+        }
+        guard !parent.content().isEmpty else {
             return
         }
         
@@ -39,10 +50,12 @@ public class MenuPresenter {
             let newWindow = UIWindow(windowScene: windowScene)
             
             let viewController = WindowViewController()
-            viewController.menuContent = parent.content()
+            viewController.menuContent = parent.content
+            viewController.menuType = parent.menuType
             viewController.contentBackgroundColor = parent.contentBackgroundColor
             viewController.accentColor = parent.contentAccentColor
             viewController.font = parent.font
+            viewController.hideMenuOnDeviceRotation = parent.hideMenuOnDeviceRotation
             viewController.menuButtonFrame = buttonFrame
             viewController.finished = dismiss
             viewController.view.backgroundColor = .clear
@@ -67,6 +80,11 @@ public class MenuPresenter {
             }
         }
     }
+}
+
+
+// MARK: - Internal
+extension MenuPresenter {
     
     static func dismiss() {
         
