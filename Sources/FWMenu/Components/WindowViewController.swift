@@ -13,7 +13,7 @@ class WindowViewController: UIViewController {
     static let menuPadding: CGFloat = 8
     
     var menuContent: (() -> [[FWMenuItem]])!
-    var menuButtonFrame: CGRect!
+    var menuButtonFrame: CGRect?
     var menuType: FWMenuType!
     var contentBackgroundColor: Color?
     var accentColor: Color?
@@ -179,10 +179,18 @@ extension WindowViewController {
         let menuPadding = Self.menuPadding
         let topPadding = menuPadding * (UIDevice.hasNotch ? 5 : 3)
         
-        let availableTopSpace = menuButtonFrame.minY - topPadding
-        let availableBottomSpace = screenSize.height - menuButtonFrame.maxY - menuPadding * 2
-        let availableLeftSpace = menuButtonFrame.minX - menuPadding * 2
-        let availableRightSpace = screenSize.width - menuButtonFrame.maxX - menuPadding * 2
+        let sourceRect = menuButtonFrame ?? {
+            
+            let x = max((screenSize.width - menuSize.width) / 2, menuPadding)
+            let y = max((screenSize.height - menuSize.height) / 2, topPadding)
+            
+            return CGRect(origin: CGPoint(x: x, y: y), size: CGSize(width: 1, height: 1))
+        }()
+        
+        let availableTopSpace = sourceRect.minY - topPadding
+        let availableBottomSpace = screenSize.height - sourceRect.maxY - menuPadding * 2
+        let availableLeftSpace = sourceRect.minX - menuPadding * 2
+        let availableRightSpace = screenSize.width - sourceRect.maxX - menuPadding * 2
         
         let x, y: CGFloat
         let height: CGFloat
@@ -190,28 +198,28 @@ extension WindowViewController {
         // positioning priority order -
         
         if menuSize.height <= availableTopSpace, availableTopSpace >= availableBottomSpace { // above the button
-            x = min(max(menuButtonFrame.maxX - menuSize.width, menuPadding), screenSize.width - menuSize.width - menuPadding)
-            y = menuButtonFrame.minY - menuSize.height - menuPadding
+            x = min(max(sourceRect.maxX - menuSize.width, menuPadding), screenSize.width - menuSize.width - menuPadding)
+            y = sourceRect.minY - menuSize.height - menuPadding
             height = menuSize.height
         } else if menuSize.height <= availableBottomSpace, availableBottomSpace > availableTopSpace { // below the button
-            x = min(max(menuButtonFrame.maxX - menuSize.width, menuPadding), screenSize.width - menuSize.width - menuPadding)
-            y = menuButtonFrame.maxY + menuPadding * 2
+            x = min(max(sourceRect.maxX - menuSize.width, menuPadding), screenSize.width - menuSize.width - menuPadding)
+            y = sourceRect.maxY + menuPadding * 2
             height = menuSize.height
         } else if menuSize.width <= availableLeftSpace, availableLeftSpace >= availableRightSpace { // to the left of the button
-            x = menuButtonFrame.minX - menuSize.width - menuPadding
-            y = max(min(screenSize.height - menuSize.height - menuPadding, menuButtonFrame.minY), topPadding)
+            x = sourceRect.minX - menuSize.width - menuPadding
+            y = max(min(screenSize.height - menuSize.height - menuPadding, sourceRect.minY), topPadding)
             height = min(menuSize.height, screenSize.height - menuPadding - topPadding)
         } else if menuSize.width <= availableRightSpace, availableRightSpace > availableLeftSpace { // to the right of the button
-            x = menuButtonFrame.maxX + menuPadding
-            y = max(min(screenSize.height - menuSize.height - menuPadding, menuButtonFrame.minY), topPadding)
+            x = sourceRect.maxX + menuPadding
+            y = max(min(screenSize.height - menuSize.height - menuPadding, sourceRect.minY), topPadding)
             height = min(menuSize.height, screenSize.height - menuPadding - topPadding)
         } else if availableTopSpace > availableBottomSpace { // above the button, but reduce the menu height
-            x = min(max(menuButtonFrame.maxX - menuSize.width, menuPadding), screenSize.width - menuSize.width - menuPadding)
-            y = max(menuButtonFrame.minY - menuSize.height - menuPadding, topPadding)
+            x = min(max(sourceRect.maxX - menuSize.width, menuPadding), screenSize.width - menuSize.width - menuPadding)
+            y = max(sourceRect.minY - menuSize.height - menuPadding, topPadding)
             height = availableTopSpace
         } else { // below the button, but reduce the menu height
-            x = min(max(menuButtonFrame.maxX - menuSize.width, menuPadding), screenSize.width - menuSize.width - menuPadding)
-            y = menuButtonFrame.maxY + menuPadding * 2
+            x = min(max(sourceRect.maxX - menuSize.width, menuPadding), screenSize.width - menuSize.width - menuPadding)
+            y = sourceRect.maxY + menuPadding * 2
             height = availableBottomSpace - menuPadding
         }
         
@@ -222,7 +230,7 @@ extension WindowViewController {
         if let position = position {
             translate = CGAffineTransform(translationX: position.x - (x + menuSize.width / 2), y: position.y - (y + height / 2))
         } else {
-            translate = CGAffineTransform(translationX: menuButtonFrame.midX - (x + menuSize.width / 2), y: menuButtonFrame.midY - (y + height / 2))
+            translate = CGAffineTransform(translationX: sourceRect.midX - (x + menuSize.width / 2), y: sourceRect.midY - (y + height / 2))
         }
         let transform = scale.concatenating(translate)
         
@@ -244,8 +252,8 @@ extension WindowViewController {
             
             let viewControllers = self?.menuViewControllers
             
-            let buttonX = self?.menuButtonFrame.midX ?? 0
-            let buttonY = self?.menuButtonFrame.midY ?? 0
+            let buttonX = sourceRect.midX
+            let buttonY = sourceRect.midY
             let translate = CGAffineTransform(translationX: buttonX - (x + menuSize.width / 2), y: buttonY - (y + height / 2))
             let transform = scale.concatenating(translate)
             

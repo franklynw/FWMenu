@@ -31,7 +31,7 @@ public class MenuPresenter {
     /// - Parameters:
     ///   - parent: a model which conforms to FWMenuPresenting
     ///   - buttonFrame: the frame of the button (or anything) which will serve as the anchor for the menu
-    public static func present(parent: FWMenuPresenting, with buttonFrame: CGRect) {
+    public static func present(parent: FWMenuPresenting, with buttonFrame: CGRect?) {
         
         guard let appWindow = UIApplication.window else {
             return

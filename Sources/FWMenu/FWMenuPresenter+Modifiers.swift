@@ -33,4 +33,11 @@ extension FWMenuPresenter {
         copy.font = font
         return copy
     }
+    
+    /// Set this if the menus don't rotate nicely, as support for device rotation hasn't been added yet
+    public var dismissOnDeviceRotation: Self {
+        var copy = self
+        copy.hideMenuOnDeviceRotation = true
+        return copy
+    }
 }
