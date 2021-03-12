@@ -1,5 +1,5 @@
 //
-//  File.swift
+//  FWMenuItem.swift
 //  
 //
 //  Created by Franklyn Weber on 08/03/2021.
@@ -8,24 +8,29 @@
 import SwiftUI
 
 
-public struct FWMenuItem {
+public enum FWMenuItem {
     
     /*
-     Struct for defining menu items in a FWMenu
+     Enum for defining menu items in a FWMenu
      
      It can be initialised as a standard menu item, with text, icon and action, or as an item with a sub-menu (with only the title definable)
      Each menu item can be styled using the Style enum, which allows customisation of text & background colour, & font
      The style setting for a menu item will override the global setting for the menu
      */
     
-    let name: String
-    let image: UIImage?
-    let style: Style
-    let action: (() -> ())?
-    let submenuSections: [FWMenuSection]?
+    case action(name: String, imageName: String?, systemImageName: String?, style: Style, action: (() -> ()))
+    case submenu(name: String, style: Style = .plain, menuSections: [FWMenuSection], menuTitle: MenuTitle? = nil)
     
-    var hasSubmenus: Bool {
-        return submenuSections != nil
+    public static func action(name: String, imageName: String? = nil, style: Style = .plain, action: @escaping (() -> ())) -> FWMenuItem {
+        return .action(name: name, imageName: imageName, systemImageName: nil, style: style, action: action)
+    }
+    
+    public static func action(name: String, systemImageName: String, style: Style = .plain, action: @escaping (() -> ())) -> FWMenuItem {
+        return .action(name: name, imageName: nil, systemImageName: systemImageName, style: style, action: action)
+    }
+    
+    public static func submenu(name: String, style: Style = .plain, menuItems: FWMenuSection, menuTitle: MenuTitle? = nil) -> FWMenuItem {
+        return .submenu(name: name, style: style, menuSections: [menuItems], menuTitle: menuTitle)
     }
     
     public enum Style {
@@ -34,51 +39,77 @@ public struct FWMenuItem {
         case uiStyled(font: UIFont? = nil, textColor: UIColor, iconColor: UIColor? = nil, backgroundColor: UIColor? = nil)
     }
     
-    public init(name: String, imageName: String? = nil, style: Style = .plain, action: @escaping (() -> ())) {
-        self.name = name
-        if let imageName = imageName {
-            image = UIImage(named: imageName)
-        } else {
-            image = nil
+    public enum MenuTitle {
+        case standard(String)
+        case styled(String, Style)
+    }
+    
+    var name: String {
+        switch self {
+        case .action(let name, _, _, _, _), .submenu(let name, _, _, _):
+            return name
         }
-        self.style = style
-        self.action = action
-        submenuSections = nil
     }
     
-    public init(name: String, systemImageName: String, style: Style = .plain, action: @escaping (() -> ())) {
-        self.name = name
-        image = UIImage(systemName: systemImageName)
-        self.style = style
-        self.action = action
-        submenuSections = nil
+    var iconImage: UIImage? {
+        switch self {
+        case .action(_, let imageName, let systemImageName, _, _):
+            if let imageName = imageName {
+                return UIImage(named: imageName)
+            } else if let systemImageName = systemImageName {
+                return UIImage(systemName: systemImageName)
+            }
+            return nil
+        case .submenu:
+            return UIImage(systemName: "chevron.right")
+        }
     }
     
-    public init(name: String, style: Style = .plain, submenuSections: [FWMenuSection]) {
-        self.name = name
-        self.style = style
-        self.submenuSections = submenuSections
-        image = nil
-        action = nil
+    var style: Style {
+        switch self {
+        case .action(_, _, _, let style, _), .submenu(_, let style, _, _):
+            return style
+        }
     }
     
-    public init(name: String, style: Style = .plain, submenuItems: FWMenuSection) {
-        self.init(name: name, style: style, submenuSections: [submenuItems])
+    var action: () -> () {
+        switch self {
+        case .action(_, _, _, _, let action):
+            return action
+        case .submenu:
+            return {}
+        }
+    }
+    
+    var hasSubmenus: Bool {
+        if case .submenu = self {
+            return true
+        }
+        return false
+    }
+    
+    var menuSections: [FWMenuSection] {
+        switch self {
+        case .action:
+            return []
+        case .submenu(_, _, let menuSections, _):
+            return menuSections
+        }
     }
 }
 
 
 public struct FWMenuSection {
-    let title: SectionTitle?
+    
+    /*
+     Struct for defining menu sections in a FWMenu
+     
+     Contains an array of FWMenuItem
+     */
+    
     let menuItems: [FWMenuItem]
     
-    public enum SectionTitle {
-        case standard(String)
-        case styled(String, FWMenuItem.Style)
-    }
-    
-    public init(_ menuItems: [FWMenuItem], title: SectionTitle? = nil) {
+    public init(_ menuItems: [FWMenuItem]) {
         self.menuItems = menuItems
-        self.title = title
     }
 }

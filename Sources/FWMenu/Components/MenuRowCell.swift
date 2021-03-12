@@ -30,12 +30,7 @@ class MenuRowCell: UITableViewCell {
     func configure(with menuItem: FWMenuItem, accentColor: Color?, font: Font?, rowPosition: RowPosition, containingView: UIView?, tapped: @escaping () -> ()) {
         
         titleLabel.text = menuItem.name
-        
-        if menuItem.hasSubmenus {
-            iconImage.image = UIImage(systemName: "chevron.right")
-        } else {
-            iconImage.image = menuItem.image
-        }
+        iconImage.image = menuItem.iconImage
         
         switch menuItem.style {
         case .plain:
@@ -71,11 +66,12 @@ class MenuRowCell: UITableViewCell {
             titleImageConstraint = titleLabel.trailingAnchor.constraint(equalTo: iconImage.leadingAnchor)
         }
         
-        if menuItem.image == nil {
-            titleTrailingConstraint.constant = menuItem.image == nil ? 14 : 58
+        if menuItem.iconImage == nil {
+            titleTrailingConstraint.constant = 14
             titleTrailingConstraint.isActive = true
             titleImageConstraint.isActive = false
         } else {
+            titleTrailingConstraint.constant = 58
             titleImageConstraint.isActive = true
             titleTrailingConstraint.isActive = false
         }

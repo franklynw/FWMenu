@@ -58,7 +58,8 @@ class WindowViewController: UIViewController {
         
         isSetup = true
         
-        let menuViewController = showMenu(menuContent(), parentMenu: nil, section: nil)
+        let title = FWMenuItem.MenuTitle.standard("Menu Title")
+        let menuViewController = showMenu(title: title, content: menuContent(), parentMenu: nil, section: nil)
         menuViewControllers.append(menuViewController)
         
         let panGestureRecognizer: UIPanGestureRecognizer = .gestureRecognizer(delegate: self) { [weak self] recognizer in
@@ -81,7 +82,7 @@ extension WindowViewController {
     
     private func showSubMenu(from menu: MenuViewController, menuItem: FWMenuItem, section: Int, position: CGPoint) {
         
-        guard let menuItems = getMenuContent(from: menuItem) else {
+        guard let menuSections = getMenuContent(from: menuItem) else {
             return
         }
         
@@ -91,7 +92,7 @@ extension WindowViewController {
             }
         } else {
             replace? { [weak self] _ in
-                if let menuViewController = self?.showMenu(menuItems, parentMenu: menu, section: section, position: position) {
+                if let menuViewController = self?.showMenu(title: nil, content: menuSections, parentMenu: menu, section: section, position: position) {
                     self?.menuViewControllers.append(menuViewController)
                 }
             }
@@ -147,7 +148,7 @@ extension WindowViewController {
         }
     }
     
-    private func showMenu(_ content: [FWMenuSection], parentMenu: MenuViewController?, section: Int?, position: CGPoint? = nil) -> MenuViewController {
+    private func showMenu(title: FWMenuItem.MenuTitle?, content: [FWMenuSection], parentMenu: MenuViewController?, section: Int?, position: CGPoint? = nil) -> MenuViewController {
         
         let menuViewController = UIStoryboard(name: "MenuViewController", bundle: .module).instantiateInitialViewController() as! MenuViewController
         
@@ -292,13 +293,13 @@ extension WindowViewController {
     
     private func getMenuContent(from menuItem: FWMenuItem) -> [FWMenuSection]? {
         
-        guard let submenuSections = menuItem.submenuSections else {
+        guard menuItem.hasSubmenus else {
             return nil
         }
         
-        let menuItems: [FWMenuSection] = submenuSections.map { submenu in
+        let menuItems: [FWMenuSection] = menuItem.menuSections.map { submenu in
             let submenuItems = submenu.menuItems.compactMap { $0 }
-            return FWMenuSection(submenuItems, title: submenu.title)
+            return FWMenuSection(submenuItems)
         }
         
         return menuItems

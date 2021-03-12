@@ -80,7 +80,7 @@ class MenuViewController: UIViewController {
                 
                 let maxTextWidth: CGFloat
                 let additionalPadding: CGFloat
-                if $1.image == nil && !$1.hasSubmenus {
+                if $1.iconImage == nil && !$1.hasSubmenus {
                     maxTextWidth = availableWidth - rowPadding
                     additionalPadding = rowPadding
                 } else {
@@ -192,7 +192,7 @@ extension MenuViewController {
         if menuItem.hasSubmenus {
             showSubmenu(self, menuItem, section, position)
         } else {
-            menuItem.action?()
+            menuItem.action()
             finished()
         }
         
