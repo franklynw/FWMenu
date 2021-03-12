@@ -67,6 +67,7 @@ class MenuHeaderView: UIView {
             
             let icon = UIImageView(image: iconImage)
             icon.translatesAutoresizingMaskIntoConstraints = false
+            icon.contentMode = .scaleAspectFill
             
             icon.widthAnchor.constraint(equalToConstant: 30).isActive = true
             

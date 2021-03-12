@@ -21,9 +21,9 @@ class MenuViewController: UIViewController {
     var contentBackgroundColor: Color?
     var accentColor: Color?
     var font: Font?
-    var sectionIndex: Int?
     var isTopMenu = true
-    var showSubmenu: ((MenuViewController, FWMenuItem, Int, CGPoint) -> ())!
+    var selectedItem: IndexPath?
+    var showSubmenu: ((MenuViewController, FWMenuItem, CGPoint) -> ())!
     var finished: (() -> ())!
     
     var baseScale: CGFloat = 1 {
@@ -33,7 +33,6 @@ class MenuViewController: UIViewController {
     }
     
     private var menuHeaderView: MenuHeaderView?
-    private var selectedRow: IndexPath?
     private var isScrollingEnabled = true
     private var done = false
     
@@ -197,7 +196,7 @@ class MenuViewController: UIViewController {
             let positionInSuperview = tableView.convert(cellPosition, to: containingView)
             
             let menuItem = menuContent[indexPath.section].menuItems[indexPath.row]
-            menuItemWasTapped(menuItem, section: indexPath.section, position: positionInSuperview)
+            menuItemWasTapped(menuItem, indexPath: indexPath, position: positionInSuperview)
             
         default:
             selectRow(at: nil)
@@ -222,7 +221,7 @@ class MenuViewController: UIViewController {
 // MARK: - Private
 extension MenuViewController {
     
-    private func menuItemWasTapped(_ menuItem: FWMenuItem, section: Int, position: CGPoint) {
+    private func menuItemWasTapped(_ menuItem: FWMenuItem, indexPath: IndexPath, position: CGPoint) {
         
         guard !done else {
             return
@@ -235,7 +234,8 @@ extension MenuViewController {
         }
         
         if menuItem.hasSubmenus {
-            showSubmenu(self, menuItem, section, position)
+            selectedItem = indexPath
+            showSubmenu(self, menuItem, position)
         } else {
             menuItem.action()
             finished()
@@ -246,20 +246,20 @@ extension MenuViewController {
     
     private func selectRow(at indexPath: IndexPath?) {
         
-        if let selectedRow = selectedRow, selectedRow != indexPath {
-            tableView.deselectRow(at: selectedRow, animated: false)
+        if let selectedItem = selectedItem, selectedItem != indexPath {
+            tableView.deselectRow(at: selectedItem, animated: false)
         }
         if let indexPath = indexPath, indexPath.row > -1 {
             tableView.selectRow(at: indexPath, animated: false, scrollPosition: .none)
-            if indexPath != selectedRow {
+            if indexPath != selectedItem {
                 UIImpactFeedbackGenerator(style: .light).impactOccurred(intensity: 0.5)
             }
         }
         
         if indexPath?.row == -1 {
-            selectedRow = nil
+            selectedItem = nil
         } else {
-            selectedRow = indexPath
+            selectedItem = indexPath
         }
     }
     
@@ -415,7 +415,7 @@ extension MenuViewController: UITableViewDelegate, UITableViewDataSource {
             let cellPosition = CGPoint(x: cellRect.midX, y: cellRect.midY)
             let positionInSuperview = tableView.convert(cellPosition, to: self.containingView)
             
-            self.menuItemWasTapped(menuItem, section: indexPath.section, position: CGPoint(x: positionInSuperview.x, y: positionInSuperview.y - cellRect.height / 2))
+            self.menuItemWasTapped(menuItem, indexPath: indexPath, position: CGPoint(x: positionInSuperview.x, y: positionInSuperview.y - cellRect.height / 2))
         }
         
         let bgView = UIView()
