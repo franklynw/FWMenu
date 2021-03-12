@@ -51,3 +51,31 @@ extension FWMenuPresenter {
         return copy
     }
 }
+
+
+extension View {
+    
+    /// View extension to present a standalone menu - offers no real customisation. If more flexibility is required, use FWMenu(...) directly, and apply the required modifiers
+    /// - Parameters:
+    ///   - isPresented: binding to a Bool which controls whether or not to show the partial sheet
+    ///   - initialMenuTitle: an optional title for the menu
+    ///   - sourceRect: the anchor rect for the menu
+    ///   - menuSections: the menu content
+    public func fwMenu(isPresented: Binding<Bool>, initialMenuTitle: FWMenuItem.MenuTitle? = nil, sourceRect: CGRect? = nil, menuSections: @escaping () -> [FWMenuSection]) -> some View {
+        modifier(FWMenuPresentationModifier(content: { FWMenuPresenter(isPresented: isPresented, initialMenuTitle: initialMenuTitle, sourceRect: sourceRect, menuSections: menuSections) }))
+    }
+}
+
+
+struct FWMenuPresentationModifier: ViewModifier {
+    
+    var content: () -> FWMenuPresenter
+    
+    init(content: @escaping () -> FWMenuPresenter) {
+        self.content = content
+    }
+    
+    func body(content: Content) -> some View {
+        self.content()
+    }
+}
