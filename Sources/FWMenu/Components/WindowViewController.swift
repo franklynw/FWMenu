@@ -137,6 +137,10 @@ extension WindowViewController {
                     menuViewController.refreshContent(menuContent)
                     recalculateSize()
                     
+                    // There's a bit of defensive programming here just in case the client modifies the menu data structure when an item is selected,
+                    // & we end up with a different amount of rows, etc - it's undefined behaviour if this is done, but it seems robust enough & the menus
+                    // will generally just reload, but it's defnitely not recommended
+                    
                     var foundContent: [FWMenuSection]?
                     if let selectedIndexPath = selectedIndexPath {
                         let sectionIndex = selectedIndexPath.section
@@ -152,7 +156,12 @@ extension WindowViewController {
                 }
             }
             
-            self.menuViewControllers.last?.isTopMenu = true
+            guard let topMenu = self.menuViewControllers.last else {
+                self.finished()
+                return
+            }
+            
+            topMenu.isTopMenu = true
             self.scaleMenus()
         }
     }
@@ -351,19 +360,5 @@ extension WindowViewController: UIGestureRecognizerDelegate {
     
     func gestureRecognizer(_ gestureRecognizer: UIGestureRecognizer, shouldRecognizeSimultaneouslyWith otherGestureRecognizer: UIGestureRecognizer) -> Bool {
         return true
-    }
-}
-
-
-fileprivate extension UIDeviceOrientation {
-    
-    func isAspectEqual(to orientation: UIDeviceOrientation) -> Bool {
-        
-        switch (self.isLandscape, orientation.isLandscape) {
-        case (true, true), (false, false):
-            return true
-        default:
-            return false
-        }
     }
 }

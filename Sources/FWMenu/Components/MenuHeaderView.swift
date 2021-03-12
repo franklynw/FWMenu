@@ -92,7 +92,7 @@ class MenuHeaderView: UIView {
         self.backgroundColor = title.style?.backgroundColor ?? backgroundColor
         
         let tapGesture: UITapGestureRecognizer = .gestureRecognizer { _ in
-            // nothing
+            // nothing, just stops the menu being dismissed if the user taps the header
         }
         addGestureRecognizer(tapGesture)
     }
