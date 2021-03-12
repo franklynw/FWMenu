@@ -62,7 +62,8 @@ extension FWMenu {
     /// It's fine to update menu item values, but not their content (ie, sub-menus) - behaviour here is undefined and will probably crash
     public var settingsMenu: Self {
         var copy = self
-        copy.menuType = .settings
+        let menuTitle = copy.menuType.menuTitle
+        copy.menuType = .settings(title: menuTitle)
         return copy
     }
 }

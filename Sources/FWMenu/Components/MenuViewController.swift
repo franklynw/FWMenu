@@ -16,6 +16,7 @@ class MenuViewController: UIViewController {
     weak var containingView: UIView?
     weak var parentMenu: MenuViewController?
     
+    var menuTitle: FWMenuItem.MenuTitle?
     var menuContent: [FWMenuSection] = []
     var contentBackgroundColor: Color?
     var accentColor: Color?
@@ -25,6 +26,13 @@ class MenuViewController: UIViewController {
     var showSubmenu: ((MenuViewController, FWMenuItem, Int, CGPoint) -> ())!
     var finished: (() -> ())!
     
+    var baseScale: CGFloat = 1 {
+        didSet {
+            view.transform = CGAffineTransform(scaleX: baseScale, y: baseScale)
+        }
+    }
+    
+    private var menuHeaderView: MenuHeaderView?
     private var selectedRow: IndexPath?
     private var isScrollingEnabled = true
     private var done = false
@@ -35,6 +43,13 @@ class MenuViewController: UIViewController {
     private let selectedBackgroundColor = UIColor(red: 0.92, green: 0.92, blue: 0.92, alpha: 1)
     private let minMenuWidth: CGFloat = 250
     private let dragSensitivity: CGFloat = 250 // the lower the number, the more static the user's finger needs to be for the selection to occur
+    
+    private var menuAccentColor: UIColor? {
+        guard let accentColor = accentColor else {
+            return nil
+        }
+        return UIColor(accentColor)
+    }
     
     
     override func viewDidLoad() {
@@ -60,9 +75,30 @@ class MenuViewController: UIViewController {
         
         tableView.delegate = self
         tableView.dataSource = self
+        
+        if let menuHeaderView = menuHeaderView {
+            tableView.tableHeaderView = menuHeaderView
+        }
     }
     
+    override func viewWillLayoutSubviews() {
+        
+        super.viewWillLayoutSubviews()
+        
+        guard let menuHeaderView = menuHeaderView else {
+            return
+        }
+        
+        let menuHeaderHeight = menuHeaderView.systemLayoutSizeFitting(UIView.layoutFittingCompressedSize).height
+        menuHeaderView.frame = CGRect(origin: menuHeaderView.frame.origin, size: CGSize(width: menuHeaderView.frame.width, height: menuHeaderHeight))
+    }
+    
+    
     var menuSize: CGSize {
+        
+        if let menuTitle = menuTitle {
+            menuHeaderView = MenuHeaderView(title: menuTitle, backgroundColor: sectionHeaderColor.withAlphaComponent(0.4), menuAccentColor: menuAccentColor)
+        }
         
         let screenSize = UIScreen.main.bounds.size
         let menuPadding = WindowViewController.menuPadding
@@ -72,7 +108,16 @@ class MenuViewController: UIViewController {
         let rowPadding: CGFloat = 32
         var maxWidth = CGFloat.zero
         
-        let totalHeight = menuContent.reduce(CGFloat.zero) {
+        let menuHeaderHeight: CGFloat
+        if let menuHeaderView = menuHeaderView {
+            let headerSize = menuHeaderView.size
+            maxWidth = headerSize.width
+            menuHeaderHeight = headerSize.height
+        } else {
+            menuHeaderHeight = 0
+        }
+        
+        let totalHeight = menuHeaderHeight + menuContent.reduce(CGFloat.zero) {
             
             let section = $1
             
@@ -143,7 +188,7 @@ class MenuViewController: UIViewController {
             selectRow(at: nil)
             self.fullSize()
             
-            guard !isScrollingEnabled, !done, let indexPath = indexPath, gestureRecognizer.velocity(in: tableView).magnitude < dragSensitivity else {
+            guard !isScrollingEnabled, !done, let indexPath = indexPath, indexPath.row > -1, gestureRecognizer.velocity(in: tableView).magnitude < dragSensitivity else {
                 return
             }
                 
@@ -204,14 +249,18 @@ extension MenuViewController {
         if let selectedRow = selectedRow, selectedRow != indexPath {
             tableView.deselectRow(at: selectedRow, animated: false)
         }
-        if let indexPath = indexPath {
+        if let indexPath = indexPath, indexPath.row > -1 {
             tableView.selectRow(at: indexPath, animated: false, scrollPosition: .none)
             if indexPath != selectedRow {
                 UIImpactFeedbackGenerator(style: .light).impactOccurred(intensity: 0.5)
             }
         }
         
-        selectedRow = indexPath
+        if indexPath?.row == -1 {
+            selectedRow = nil
+        } else {
+            selectedRow = indexPath
+        }
     }
     
     private func indexPath(forRowAtOffset offset: CGPoint) -> IndexPath? {
@@ -220,6 +269,9 @@ extension MenuViewController {
         // in any case, this is super quick as it's just a binary search
         
         guard offset.x > 0 && offset.x < tableView.frame.width else {
+            return nil
+        }
+        guard offset.y > 0 && offset.y < tableView.frame.height else {
             return nil
         }
         
@@ -270,7 +322,7 @@ extension MenuViewController {
             }
         }
         
-        return result
+        return result ?? IndexPath(row: -1, section: -1)
     }
     
     private func dropBackIfNecessary(touchLocation: CGPoint) {
@@ -291,7 +343,7 @@ extension MenuViewController {
         
         let outsideMagnitude = max(1 - CGPoint(x: outsideX, y: outsideY).magnitude / 600, 0.8)
         
-        let transform = CGAffineTransform(scaleX: outsideMagnitude, y: outsideMagnitude)
+        let transform = CGAffineTransform(scaleX: outsideMagnitude * baseScale, y: outsideMagnitude * baseScale)
         
         UIView.animate(withDuration: 0.1) {
             self.view.transform = transform
@@ -305,7 +357,7 @@ extension MenuViewController {
     private func fullSize() {
         
         UIView.animate(withDuration: 0.4, delay: 0, usingSpringWithDamping: 0.65, initialSpringVelocity: 2, options: .curveEaseInOut) {
-            self.view.transform = .identity
+            self.view.transform = CGAffineTransform(scaleX: self.baseScale, y: self.baseScale)
         }
         
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) {
@@ -316,7 +368,7 @@ extension MenuViewController {
     private func transform(_ scale: CGFloat) {
         
         let scale = pow(scale, 1.5)
-        let transform = CGAffineTransform(scaleX: scale, y: scale)
+        let transform = CGAffineTransform(scaleX: scale * baseScale, y: scale * baseScale)
         
         UIView.animate(withDuration: 0.1) {
             self.view.transform = transform
@@ -353,7 +405,7 @@ extension MenuViewController: UITableViewDelegate, UITableViewDataSource {
         }
         
         let menuItem = menuContent[indexPath.section].menuItems[indexPath.row]
-        cell.configure(with: menuItem, accentColor: accentColor, font: font, rowPosition: rowPosition, containingView: containingView) { [weak self, weak tableView] in
+        cell.configure(with: menuItem, accentColor: menuAccentColor, font: font?.uiFont(), rowPosition: rowPosition, containingView: containingView) { [weak self, weak tableView] in
             
             guard let self = self, let tableView = tableView else {
                 return

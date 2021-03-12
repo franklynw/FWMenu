@@ -58,8 +58,7 @@ class WindowViewController: UIViewController {
         
         isSetup = true
         
-        let title = FWMenuItem.MenuTitle.standard("Menu Title")
-        let menuViewController = showMenu(title: title, content: menuContent(), parentMenu: nil, section: nil)
+        let menuViewController = showMenu(title: menuType.menuTitle, content: menuContent(), parentMenu: nil, section: nil)
         menuViewControllers.append(menuViewController)
         
         let panGestureRecognizer: UIPanGestureRecognizer = .gestureRecognizer(delegate: self) { [weak self] recognizer in
@@ -89,12 +88,14 @@ extension WindowViewController {
         if !menu.isTopMenu {
             removeTopMenu { [weak self] _ in
                 self?.menuViewControllers.last?.isTopMenu = true
+                self?.scaleMenus()
             }
         } else {
             replace? { [weak self] _ in
-                if let menuViewController = self?.showMenu(title: nil, content: menuSections, parentMenu: menu, section: section, position: position) {
+                if let menuViewController = self?.showMenu(title: menuItem.menuTitle, content: menuSections, parentMenu: menu, section: section, position: position) {
                     self?.menuViewControllers.append(menuViewController)
                 }
+                self?.scaleMenus()
             }
         }
     }
@@ -145,6 +146,7 @@ extension WindowViewController {
             }
             
             self.menuViewControllers.last?.isTopMenu = true
+            self.scaleMenus()
         }
     }
     
@@ -154,6 +156,7 @@ extension WindowViewController {
         
         menuViewController.containingView = view
         menuViewController.parentMenu = parentMenu
+        menuViewController.menuTitle = title
         menuViewController.menuContent = content
         menuViewController.sectionIndex = section
         menuViewController.contentBackgroundColor = contentBackgroundColor
@@ -319,6 +322,14 @@ extension WindowViewController {
         }, completion: { finished in
             self.removeViewController(viewController)
         })
+    }
+    
+    private func scaleMenus() {
+        UIView.animate(withDuration: 0.3) {
+            self.menuViewControllers.reversed().enumerated().forEach {
+                $0.element.baseScale = 1 - CGFloat($0.offset) * 0.1
+            }
+        }
     }
     
     private func removeViewController(_ viewController: UIViewController?) {

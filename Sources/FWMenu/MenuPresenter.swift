@@ -63,7 +63,6 @@ public class MenuPresenter {
             let tapGesture: UITapGestureRecognizer = .gestureRecognizer { _ in
                 dismiss()
             }
-            
             viewController.view.addGestureRecognizer(tapGesture)
             
             newWindow.rootViewController = viewController

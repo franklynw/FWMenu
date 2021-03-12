@@ -33,17 +33,6 @@ public enum FWMenuItem {
         return .submenu(name: name, style: style, menuSections: [menuItems], menuTitle: menuTitle)
     }
     
-    public enum Style {
-        case plain
-        case styled(font: Font? = nil, textColor: Color, iconColor: Color? = nil, backgroundColor: Color? = nil)
-        case uiStyled(font: UIFont? = nil, textColor: UIColor, iconColor: UIColor? = nil, backgroundColor: UIColor? = nil)
-    }
-    
-    public enum MenuTitle {
-        case standard(String)
-        case styled(String, Style)
-    }
-    
     var name: String {
         switch self {
         case .action(let name, _, _, _, _), .submenu(let name, _, _, _):
@@ -94,6 +83,15 @@ public enum FWMenuItem {
             return []
         case .submenu(_, _, let menuSections, _):
             return menuSections
+        }
+    }
+    
+    var menuTitle: MenuTitle? {
+        switch self {
+        case .action:
+            return nil
+        case .submenu(_, _, _, let menuTitle):
+            return menuTitle
         }
     }
 }
