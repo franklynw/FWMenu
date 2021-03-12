@@ -118,15 +118,23 @@ class MenuViewController: UIViewController {
         }
         
         let touchLocation = gestureRecognizer.location(in: view)
-        dropBackIfNecessary(touchLocation: gestureRecognizer.location(in: containingView))
+        let indexPath = self.indexPath(forRowAtOffset: touchLocation)
         
         switch gestureRecognizer.state {
-        case .began, .changed:
-            guard let indexPath = indexPath(forRowAtOffset: touchLocation) else {
-                finished()
+        case .began:
+            guard let indexPath = indexPath else {
+                if !done {
+                    done = true
+                    finished()
+                }
                 return
             }
             guard !isScrollingEnabled else {
+                return
+            }
+            selectRow(at: indexPath)
+        case .changed:
+            guard !isScrollingEnabled, !done else {
                 return
             }
             selectRow(at: indexPath)
@@ -135,7 +143,7 @@ class MenuViewController: UIViewController {
             selectRow(at: nil)
             self.fullSize()
             
-            guard !isScrollingEnabled, gestureRecognizer.velocity(in: tableView).magnitude < dragSensitivity, let indexPath = indexPath(forRowAtOffset: touchLocation) else {
+            guard !isScrollingEnabled, !done, let indexPath = indexPath, gestureRecognizer.velocity(in: tableView).magnitude < dragSensitivity else {
                 return
             }
                 
@@ -150,6 +158,8 @@ class MenuViewController: UIViewController {
             selectRow(at: nil)
             self.fullSize()
         }
+        
+        dropBackIfNecessary(touchLocation: gestureRecognizer.location(in: containingView))
     }
     
     func refreshContent(_ content: [[FWMenuItem]]) {
@@ -264,6 +274,10 @@ extension MenuViewController {
     }
     
     private func dropBackIfNecessary(touchLocation: CGPoint) {
+        
+        guard !done else {
+            return
+        }
         
         let leeway: CGFloat = 25
         
