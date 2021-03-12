@@ -16,7 +16,7 @@ class MenuViewController: UIViewController {
     weak var containingView: UIView?
     weak var parentMenu: MenuViewController?
     
-    var menuContent: [[FWMenuItem]] = [[]]
+    var menuContent: [FWMenuSection] = []
     var contentBackgroundColor: Color?
     var accentColor: Color?
     var font: Font?
@@ -76,7 +76,7 @@ class MenuViewController: UIViewController {
             
             let section = $1
             
-            let sectionHeight = section.reduce(CGFloat.zero) {
+            let sectionHeight = section.menuItems.reduce(CGFloat.zero) {
                 
                 let maxTextWidth: CGFloat
                 let additionalPadding: CGFloat
@@ -151,7 +151,7 @@ class MenuViewController: UIViewController {
             let cellPosition = CGPoint(x: cellRect.midX, y: cellRect.midY)
             let positionInSuperview = tableView.convert(cellPosition, to: containingView)
             
-            let menuItem = menuContent[indexPath.section][indexPath.row]
+            let menuItem = menuContent[indexPath.section].menuItems[indexPath.row]
             menuItemWasTapped(menuItem, section: indexPath.section, position: positionInSuperview)
             
         default:
@@ -162,7 +162,7 @@ class MenuViewController: UIViewController {
         dropBackIfNecessary(touchLocation: gestureRecognizer.location(in: containingView))
     }
     
-    func refreshContent(_ content: [[FWMenuItem]]) {
+    func refreshContent(_ content: [FWMenuSection]) {
         
         menuContent = content
         done = false
@@ -224,7 +224,7 @@ extension MenuViewController {
         }
         
         let tableHeight = tableView.contentSize.height
-        let totalRows = menuContent.reduce(0) { $0 + $1.count }
+        let totalRows = menuContent.reduce(0) { $0 + $1.menuItems.count }
         let sectionsCount = menuContent.count
         
         guard tableHeight > 0, totalRows > 0 else {
@@ -244,9 +244,9 @@ extension MenuViewController {
             
             while indexPath == nil && sectionIndex < sectionsCount {
                 let items = menuContent[sectionIndex]
-                let itemsCount = items.count
+                let itemsCount = items.menuItems.count
                 if pointer >= itemsCount {
-                    pointer -= items.count
+                    pointer -= items.menuItems.count
                     sectionIndex += 1
                 } else {
                     indexPath = IndexPath(row: pointer, section: sectionIndex)
@@ -337,7 +337,7 @@ extension MenuViewController: UITableViewDelegate, UITableViewDataSource {
     }
     
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        return menuContent[section].count
+        return menuContent[section].menuItems.count
     }
     
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
@@ -346,13 +346,13 @@ extension MenuViewController: UITableViewDelegate, UITableViewDataSource {
         
         let rowPosition: MenuRowCell.RowPosition
         
-        if indexPath.section == menuContent.count - 1, indexPath.row == menuContent[menuContent.count - 1].count - 1 {
+        if indexPath.section == menuContent.count - 1, indexPath.row == menuContent[menuContent.count - 1].menuItems.count - 1 {
             rowPosition = .bottom
         } else {
             rowPosition = .other
         }
         
-        let menuItem = menuContent[indexPath.section][indexPath.row]
+        let menuItem = menuContent[indexPath.section].menuItems[indexPath.row]
         cell.configure(with: menuItem, accentColor: accentColor, font: font, rowPosition: rowPosition, containingView: containingView) { [weak self, weak tableView] in
             
             guard let self = self, let tableView = tableView else {

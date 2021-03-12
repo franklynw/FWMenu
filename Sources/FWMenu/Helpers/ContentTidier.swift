@@ -10,9 +10,9 @@ import Foundation
 
 struct ContentTidier {
     
-    static func tidyMenuContent(_ section: [FWMenuItem]) -> [FWMenuItem]? {
+    static func tidyMenuContent(_ section: FWMenuSection) -> FWMenuSection? {
         
-        let tidied: [FWMenuItem]? = section.compactMap {
+        let tidied: [FWMenuItem]? = section.menuItems.compactMap {
             if !$0.hasSubmenus {
                 return $0
             }
@@ -24,7 +24,7 @@ struct ContentTidier {
         }
         
         if let tidied = tidied, !tidied.isEmpty {
-            return tidied
+            return FWMenuSection(tidied, title: section.title)
         }
         
         return nil

@@ -15,7 +15,7 @@ public struct FWMenu<Label: View>: View, FWMenuPresenting {
      Also addresses an issue in Apple's version where the background continues to receive touch events while the menu is showing
      */
     
-    public let content: () -> ([[FWMenuItem]])
+    public let content: () -> ([FWMenuSection])
     
     public var menuType: FWMenuType = .standard // TODO: - FWMenuType.settings is somewhat fragile, & will probably crash if the client code alters the structure of the menus after an item is selected
     public var contentBackgroundColor: Color?
@@ -47,9 +47,9 @@ public struct FWMenu<Label: View>: View, FWMenuPresenting {
     }
     
     
-    public init(label: Label, sections: @escaping () -> ([[FWMenuItem]])) {
+    public init(label: Label, sections: @escaping () -> ([FWMenuSection])) {
         self.label = label
-        content = { () -> [[FWMenuItem]] in
+        content = { () -> [FWMenuSection] in
             sections().compactMap { ContentTidier.tidyMenuContent($0) }
         }
         text = nil
@@ -58,10 +58,10 @@ public struct FWMenu<Label: View>: View, FWMenuPresenting {
         imageName = nil
     }
     
-    public init(title: String, imageSystemName: String, sections: @escaping () -> ([[FWMenuItem]])) where Label == SwiftUI.Label<Text, AnyView> {
+    public init(title: String, imageSystemName: String, sections: @escaping () -> ([FWMenuSection])) where Label == SwiftUI.Label<Text, AnyView> {
         self.title = title
         self.imageName = imageSystemName
-        content = { () -> [[FWMenuItem]] in
+        content = { () -> [FWMenuSection] in
             sections().compactMap { ContentTidier.tidyMenuContent($0) }
         }
         label = nil
@@ -69,10 +69,10 @@ public struct FWMenu<Label: View>: View, FWMenuPresenting {
         image = nil
     }
     
-    public init(title: String, image: Image, sections: @escaping () -> ([[FWMenuItem]])) where Label == SwiftUI.Label<Text, AnyView> {
+    public init(title: String, image: Image, sections: @escaping () -> ([FWMenuSection])) where Label == SwiftUI.Label<Text, AnyView> {
         self.title = title
         self.image = image
-        content = { () -> [[FWMenuItem]] in
+        content = { () -> [FWMenuSection] in
             sections().compactMap { ContentTidier.tidyMenuContent($0) }
         }
         label = nil
@@ -80,9 +80,9 @@ public struct FWMenu<Label: View>: View, FWMenuPresenting {
         imageName = nil
     }
     
-    public init(title: String, sections: @escaping () -> ([[FWMenuItem]])) where Label == Text {
+    public init(title: String, sections: @escaping () -> ([FWMenuSection])) where Label == Text {
         self.title = title
-        content = { () -> [[FWMenuItem]] in
+        content = { () -> [FWMenuSection] in
             sections().compactMap { ContentTidier.tidyMenuContent($0) }
         }
         label = nil
@@ -91,9 +91,9 @@ public struct FWMenu<Label: View>: View, FWMenuPresenting {
         imageName = nil
     }
     
-    public init(imageSystemName: String, sections: @escaping () -> ([[FWMenuItem]])) where Label == AnyView {
+    public init(imageSystemName: String, sections: @escaping () -> ([FWMenuSection])) where Label == AnyView {
         self.imageName = imageSystemName
-        content = { () -> [[FWMenuItem]] in
+        content = { () -> [FWMenuSection] in
             sections().compactMap { ContentTidier.tidyMenuContent($0) }
         }
         title = nil
@@ -102,9 +102,9 @@ public struct FWMenu<Label: View>: View, FWMenuPresenting {
         image = nil
     }
     
-    public init(image: Image, sections: @escaping () -> ([[FWMenuItem]])) where Label == AnyView {
+    public init(image: Image, sections: @escaping () -> ([FWMenuSection])) where Label == AnyView {
         self.image = image
-        content = { () -> [[FWMenuItem]] in
+        content = { () -> [FWMenuSection] in
             sections().compactMap { ContentTidier.tidyMenuContent($0) }
         }
         title = nil
@@ -113,43 +113,43 @@ public struct FWMenu<Label: View>: View, FWMenuPresenting {
         imageName = nil
     }
     
-    public init(label: Label, items: @escaping () -> ([FWMenuItem])) {
-        let sections =  { () -> [[FWMenuItem]] in
+    public init(label: Label, items: @escaping () -> (FWMenuSection)) {
+        let sections =  { () -> [FWMenuSection] in
             [items()]
         }
         self.init(label: label, sections: sections)
     }
     
-    public init(title: String, imageSystemName: String, items: @escaping () -> ([FWMenuItem])) where Label == SwiftUI.Label<Text, AnyView> {
-        let sections =  { () -> [[FWMenuItem]] in
+    public init(title: String, imageSystemName: String, items: @escaping () -> (FWMenuSection)) where Label == SwiftUI.Label<Text, AnyView> {
+        let sections =  { () -> [FWMenuSection] in
             [items()]
         }
         self.init(title: title, imageSystemName: imageSystemName, sections: sections)
     }
     
-    public init(title: String, image: Image, items: @escaping () -> ([FWMenuItem])) where Label == SwiftUI.Label<Text, AnyView> {
-        let sections =  { () -> [[FWMenuItem]] in
+    public init(title: String, image: Image, items: @escaping () -> (FWMenuSection)) where Label == SwiftUI.Label<Text, AnyView> {
+        let sections =  { () -> [FWMenuSection] in
             [items()]
         }
         self.init(title: title, image: image, sections: sections)
     }
     
-    public init(title: String, items: @escaping () -> ([FWMenuItem])) where Label == Text {
-        let sections =  { () -> [[FWMenuItem]] in
+    public init(title: String, items: @escaping () -> (FWMenuSection)) where Label == Text {
+        let sections =  { () -> [FWMenuSection] in
             [items()]
         }
         self.init(title: title, sections: sections)
     }
     
-    public init(imageSystemName: String, items: @escaping () -> ([FWMenuItem])) where Label == AnyView {
-        let sections =  { () -> [[FWMenuItem]] in
+    public init(imageSystemName: String, items: @escaping () -> (FWMenuSection)) where Label == AnyView {
+        let sections =  { () -> [FWMenuSection] in
             [items()]
         }
         self.init(imageSystemName: imageSystemName, sections: sections)
     }
     
-    public init(image: Image, items: @escaping () -> ([FWMenuItem])) where Label == AnyView {
-        let sections =  { () -> [[FWMenuItem]] in
+    public init(image: Image, items: @escaping () -> (FWMenuSection)) where Label == AnyView {
+        let sections =  { () -> [FWMenuSection] in
             [items()]
         }
         self.init(image: image, sections: sections)

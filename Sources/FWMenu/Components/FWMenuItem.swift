@@ -22,7 +22,7 @@ public struct FWMenuItem {
     let image: UIImage?
     let style: Style
     let action: (() -> ())?
-    let submenuSections: [[FWMenuItem]]?
+    let submenuSections: [FWMenuSection]?
     
     var hasSubmenus: Bool {
         return submenuSections != nil
@@ -54,7 +54,7 @@ public struct FWMenuItem {
         submenuSections = nil
     }
     
-    public init(name: String, style: Style = .plain, submenuSections: [[FWMenuItem]]) {
+    public init(name: String, style: Style = .plain, submenuSections: [FWMenuSection]) {
         self.name = name
         self.style = style
         self.submenuSections = submenuSections
@@ -62,7 +62,23 @@ public struct FWMenuItem {
         action = nil
     }
     
-    public init(name: String, style: Style = .plain, submenuItems: [FWMenuItem]) {
+    public init(name: String, style: Style = .plain, submenuItems: FWMenuSection) {
         self.init(name: name, style: style, submenuSections: [submenuItems])
+    }
+}
+
+
+public struct FWMenuSection {
+    let title: SectionTitle?
+    let menuItems: [FWMenuItem]
+    
+    public enum SectionTitle {
+        case standard(String)
+        case styled(String, FWMenuItem.Style)
+    }
+    
+    public init(_ menuItems: [FWMenuItem], title: SectionTitle? = nil) {
+        self.menuItems = menuItems
+        self.title = title
     }
 }

@@ -12,7 +12,7 @@ class WindowViewController: UIViewController {
     
     static let menuPadding: CGFloat = 8
     
-    var menuContent: (() -> [[FWMenuItem]])!
+    var menuContent: (() -> [FWMenuSection])!
     var menuButtonFrame: CGRect?
     var menuType: FWMenuType!
     var contentBackgroundColor: Color?
@@ -133,7 +133,7 @@ extension WindowViewController {
                     recalculateSize()
                 } else if let menuSectionIndex = menuViewController.sectionIndex {
                     
-                    let menuItem = self.menuContent()[index - 1][menuSectionIndex]
+                    let menuItem = self.menuContent()[index - 1].menuItems[menuSectionIndex]
                     guard let menuItems = self.getMenuContent(from: menuItem) else {
                         return
                     }
@@ -147,7 +147,7 @@ extension WindowViewController {
         }
     }
     
-    private func showMenu(_ content: [[FWMenuItem]], parentMenu: MenuViewController?, section: Int?, position: CGPoint? = nil) -> MenuViewController {
+    private func showMenu(_ content: [FWMenuSection], parentMenu: MenuViewController?, section: Int?, position: CGPoint? = nil) -> MenuViewController {
         
         let menuViewController = UIStoryboard(name: "MenuViewController", bundle: .module).instantiateInitialViewController() as! MenuViewController
         
@@ -290,15 +290,15 @@ extension WindowViewController {
         return menuViewController
     }
     
-    private func getMenuContent(from menuItem: FWMenuItem) -> [[FWMenuItem]]? {
+    private func getMenuContent(from menuItem: FWMenuItem) -> [FWMenuSection]? {
         
         guard let submenuSections = menuItem.submenuSections else {
             return nil
         }
         
-        let menuItems: [[FWMenuItem]] = submenuSections.map { submenu in
-            let submenuItems = submenu.compactMap { $0 }
-            return submenuItems
+        let menuItems: [FWMenuSection] = submenuSections.map { submenu in
+            let submenuItems = submenu.menuItems.compactMap { $0 }
+            return FWMenuSection(submenuItems, title: submenu.title)
         }
         
         return menuItems
