@@ -12,8 +12,9 @@ public struct FWMenuPresenter: View, FWMenuPresenting {
     
     @Binding private var isPresented: Bool
     
-    public let content: () -> ([[FWMenuItem]])
+    public let content: () -> ([FWMenuSection])
     
+    public var menuType: FWMenuType
     public var contentBackgroundColor: Color?
     public var contentAccentColor: Color?
     public var font: Font?
@@ -22,17 +23,28 @@ public struct FWMenuPresenter: View, FWMenuPresenting {
     private let sourceRect: CGRect?
 
     
-    public init(isPresented: Binding<Bool>, menuSections: @escaping () -> ([[FWMenuItem]]), sourceRect: CGRect? = nil) {
+    public init(isPresented: Binding<Bool>, initialMenuTitle: FWMenuItem.MenuTitle? = nil, sourceRect: CGRect? = nil, menuSections: @escaping () -> [FWMenuSection]) {
         _isPresented = isPresented
         content = menuSections
+        menuType = .standard(title: initialMenuTitle)
         self.sourceRect = sourceRect
     }
     
-    public init(isPresented: Binding<Bool>, menuItems: @escaping () -> ([FWMenuItem]), sourceRect: CGRect? = nil) {
+    public init(isPresented: Binding<Bool>, initialMenuTitle: FWMenuItem.MenuTitle? = nil, sourceRect: CGRect? = nil, menuItems: @escaping () -> FWMenuSection) {
         _isPresented = isPresented
-        content = { () -> [[FWMenuItem]] in
+        content = { () -> [FWMenuSection] in
             return [menuItems()]
         }
+        menuType = .standard(title: initialMenuTitle)
+        self.sourceRect = sourceRect
+    }
+    
+    public init(isPresented: Binding<Bool>, sourceRect: CGRect? = nil, menu: @escaping () -> FWMenuItem) {
+        _isPresented = isPresented
+        content = { () -> [FWMenuSection] in
+            return menu().menuSections
+        }
+        menuType = .standard(title: menu().menuTitle)
         self.sourceRect = sourceRect
     }
     

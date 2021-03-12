@@ -27,42 +27,12 @@ class MenuRowCell: UITableViewCell {
     private let lineColor = UIColor(red: 0.85, green: 0.85, blue: 0.85, alpha: 1)
     
     
-    func configure(with menuItem: FWMenuItem, accentColor: Color?, font: Font?, rowPosition: RowPosition, containingView: UIView?, tapped: @escaping () -> ()) {
+    func configure(with menuItem: FWMenuItem, accentColor: UIColor?, font: UIFont?, rowPosition: RowPosition, containingView: UIView?, tapped: @escaping () -> ()) {
         
         titleLabel.text = menuItem.name
+        iconImage.image = menuItem.iconImage
         
-        if menuItem.hasSubmenus {
-            iconImage.image = UIImage(systemName: "chevron.right")
-        } else {
-            iconImage.image = menuItem.image
-        }
-        
-        switch menuItem.style {
-        case .plain:
-            let color = accentColor != nil ? UIColor(accentColor!) : .label
-            titleLabel.font = nil
-            titleLabel.textColor = color
-            iconImage.tintColor = color
-            backgroundColorView.backgroundColor = .clear
-        case .styled(let font, let textColor, let iconColor, let backgroundColor):
-            if let font = font {
-                titleLabel.font = font.uiFont()
-            }
-            titleLabel.textColor = UIColor(textColor)
-            iconImage.tintColor = UIColor(iconColor ?? textColor)
-            if let backgroundColor = backgroundColor {
-                backgroundColorView.backgroundColor = UIColor(backgroundColor)
-            } else {
-                backgroundColorView.backgroundColor = .clear
-            }
-        case .uiStyled(let font, let textColor, let iconColor, let backgroundColor):
-            if let font = font {
-                titleLabel.font = font
-            }
-            titleLabel.textColor = textColor
-            iconImage.tintColor = iconColor ?? textColor
-            backgroundColorView.backgroundColor = backgroundColor ?? .clear
-        }
+        menuItem.style.configure(titleLabel: titleLabel, icon: iconImage, backgroundView: backgroundColorView, menuAccentColor: accentColor, menuFont: font)
         
         if titleTrailingConstraint == nil {
             titleTrailingConstraint = titleLabel.trailingAnchor.constraint(equalTo: contentView.trailingAnchor)
@@ -71,11 +41,12 @@ class MenuRowCell: UITableViewCell {
             titleImageConstraint = titleLabel.trailingAnchor.constraint(equalTo: iconImage.leadingAnchor)
         }
         
-        if menuItem.image == nil {
-            titleTrailingConstraint.constant = menuItem.image == nil ? 14 : 58
+        if menuItem.iconImage == nil {
+            titleTrailingConstraint.constant = 14
             titleTrailingConstraint.isActive = true
             titleImageConstraint.isActive = false
         } else {
+            titleTrailingConstraint.constant = 58
             titleImageConstraint.isActive = true
             titleTrailingConstraint.isActive = false
         }

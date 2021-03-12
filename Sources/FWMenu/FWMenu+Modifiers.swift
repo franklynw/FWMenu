@@ -58,11 +58,12 @@ extension FWMenu {
     }
     
     /// Turns the menu into a settings menu, where each new menu is presented above the current menu, and content is updated when the data model changes
-    /// NB - this is currently in an early development stage, and will only work properly if the underlying data structure of the menus is unaltered when items are selected
-    /// It's fine to update menu item values, but not their content (ie, sub-menus) - behaviour here is undefined and will probably crash
+    /// NB - the underlying data structure of the menus should remain unaltered when items are selected, as the resulting behaviour is undefined and may crash
+    /// It's fine to update menu item values, but try to avoid changing the tree structure of the presented menus
     public var settingsMenu: Self {
         var copy = self
-        copy.menuType = .settings
+        let menuTitle = copy.menuType.menuTitle
+        copy.menuType = .settings(title: menuTitle)
         return copy
     }
 }

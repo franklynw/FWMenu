@@ -9,7 +9,7 @@ import SwiftUI
 
 
 public protocol FWMenuPresenting {
-    var content: () -> ([[FWMenuItem]]) { get }
+    var content: () -> ([FWMenuSection]) { get }
     var menuType: FWMenuType { get }
     var contentBackgroundColor: Color? { get }
     var contentAccentColor: Color? { get }
