@@ -172,7 +172,7 @@ FWMenu(imageSystemName: "chevron.down", items: viewModel.menuContent)
 
 ### Settings Menu
 
-This makes the menu remain on-screen when sub-menus are brought up (it will drop back a little), and will work to any number of menu levels
+This makes the menu remain on-screen when sub-menus are brought up (it will drop back a little), and will work to any number of menu levels.
 Selecting items within the menus which update values which are displayed within the menus will cause the menu content to update,
 and if necessary the menu will resize to contain its new content.
 
