@@ -16,7 +16,7 @@ class MenuViewController: UIViewController {
     weak var containingView: UIView?
     weak var parentMenu: MenuViewController?
     
-    var menuTitle: FWMenuItem.MenuTitle?
+    var menuTitle: FWMenuItem.Title?
     var menuContent: [FWMenuSection] = []
     var contentBackgroundColor: Color?
     var accentColor: Color?

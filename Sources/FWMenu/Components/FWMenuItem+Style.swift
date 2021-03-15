@@ -43,7 +43,7 @@ extension FWMenuItem {
 // MARK: - Internal
 extension FWMenuItem.Style {
     
-    func configure(titleLabel: UILabel, icon: UIImageView?, backgroundView: UIView, menuAccentColor: UIColor?, menuFont: UIFont?) {
+    func configure(titleLabel: UILabel, icon: UIImageView?, backgroundView: UIView?, menuAccentColor: UIColor?, menuFont: UIFont?) {
         
         switch self {
         case .plain:
@@ -52,7 +52,7 @@ extension FWMenuItem.Style {
             titleLabel.font = menuFont
             titleLabel.textColor = color
             icon?.tintColor = color
-            backgroundView.backgroundColor = .clear
+            backgroundView?.backgroundColor = .clear
             
         case .styled(let font, let textColor, let iconColor, let backgroundColor):
             
@@ -64,9 +64,9 @@ extension FWMenuItem.Style {
             titleLabel.textColor = UIColor(textColor ?? Color(.label))
             icon?.tintColor = UIColor(iconColor ?? textColor ?? Color(.label))
             if let backgroundColor = backgroundColor {
-                backgroundView.backgroundColor = UIColor(backgroundColor)
+                backgroundView?.backgroundColor = UIColor(backgroundColor)
             } else {
-                backgroundView.backgroundColor = .clear
+                backgroundView?.backgroundColor = .clear
             }
             
         case .uiStyled(let font, let textColor, let iconColor, let backgroundColor):
@@ -78,7 +78,7 @@ extension FWMenuItem.Style {
             }
             titleLabel.textColor = textColor ?? .label
             icon?.tintColor = iconColor ?? textColor
-            backgroundView.backgroundColor = backgroundColor ?? .clear
+            backgroundView?.backgroundColor = backgroundColor ?? .clear
         }
     }
     

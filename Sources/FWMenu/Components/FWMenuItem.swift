@@ -33,7 +33,7 @@ public enum FWMenuItem {
     ///   - style: the style for the menu item
     ///   - menuSections: the content for the submenus
     ///   - menuTitle: an optional title for the menu (nil for no title)
-    case submenu(name: String, style: Style = .plain, menuSections: [FWMenuSection], menuTitle: MenuTitle? = nil)
+    case submenu(name: String, style: Style = .plain, menuSections: [FWMenuSection], menuTitle: Title? = nil)
     
     /// Creates an action menu item
     /// - Parameters:
@@ -63,7 +63,7 @@ public enum FWMenuItem {
     ///   - style: the style for the menu item
     ///   - menuItems: the content for the submenus
     ///   - menuTitle: an optional title for the menu (nil for no title)
-    public static func submenu(name: String, style: Style = .plain, menuItems: FWMenuSection, menuTitle: MenuTitle? = nil) -> FWMenuItem {
+    public static func submenu(name: String, style: Style = .plain, menuItems: FWMenuSection, menuTitle: Title? = nil) -> FWMenuItem {
         return .submenu(name: name, style: style, menuSections: [menuItems], menuTitle: menuTitle)
     }
 }
@@ -125,7 +125,7 @@ extension FWMenuItem {
         }
     }
     
-    var menuTitle: MenuTitle? {
+    var menuTitle: Title? {
         switch self {
         case .action:
             return nil

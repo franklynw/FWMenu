@@ -61,7 +61,7 @@ extension View {
     ///   - initialMenuTitle: an optional title for the menu
     ///   - sourceRect: the anchor rect for the menu
     ///   - menuSections: the menu content
-    public func fwMenu(isPresented: Binding<Bool>, initialMenuTitle: FWMenuItem.MenuTitle? = nil, sourceRect: CGRect? = nil, menuSections: @escaping () -> [FWMenuSection]) -> some View {
+    public func fwMenu(isPresented: Binding<Bool>, initialMenuTitle: FWMenuItem.Title? = nil, sourceRect: CGRect? = nil, menuSections: @escaping () -> [FWMenuSection]) -> some View {
         modifier(FWMenuPresentationModifier(content: { FWMenuPresenter(isPresented: isPresented, initialMenuTitle: initialMenuTitle, sourceRect: sourceRect, menuSections: menuSections) }))
     }
 }

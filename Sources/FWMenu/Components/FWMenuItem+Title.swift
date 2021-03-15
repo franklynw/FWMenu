@@ -1,5 +1,5 @@
 //
-//  FWMenuItem+MenuTitle.swift
+//  FWMenuItem+Title.swift
 //  
 //
 //  Created by Franklyn Weber on 12/03/2021.
@@ -10,7 +10,7 @@ import UIKit
 
 extension FWMenuItem {
     
-    public enum MenuTitle {
+    public enum Title {
         
         /*
          Enum for defining the title of a menu
@@ -29,12 +29,20 @@ extension FWMenuItem {
         ///   - iconImage: an optional image for the menu title
         ///   - style: style attributes for the menu title
         case styled(title: String, iconImage: UIImage? = nil, style: Style)
+        
+        public func applyToLabel(_ label: UILabel, imageView: UIImageView? = nil, backgroundView: UIView? = nil) {
+            
+            label.text = text
+            imageView?.image = iconImage
+            
+            style?.configure(titleLabel: label, icon: imageView, backgroundView: backgroundView, menuAccentColor: nil, menuFont: nil)
+        }
     }
 }
 
 
 // MARK: - Internal
-extension FWMenuItem.MenuTitle {
+extension FWMenuItem.Title {
     
     var text: String {
         switch self {

@@ -48,7 +48,7 @@ public struct FWMenu<Label: View>: View, FWMenuPresenting {
     }
     
     
-    private init(title: String?, image: Image?, imageSystemName: String?, initialMenuTitle: FWMenuItem.MenuTitle? = nil, sections: @escaping () -> ([FWMenuSection])) where Label == Text {
+    private init(title: String?, image: Image?, imageSystemName: String?, initialMenuTitle: FWMenuItem.Title? = nil, sections: @escaping () -> ([FWMenuSection])) where Label == Text {
         self.title = title
         self.image = image
         imageName = imageSystemName
@@ -63,7 +63,7 @@ public struct FWMenu<Label: View>: View, FWMenuPresenting {
     
     // MARK: - Initialise with an array of FWMenuSection
     
-    public init(label: Label, initialMenuTitle: FWMenuItem.MenuTitle? = nil, sections: @escaping () -> ([FWMenuSection])) {
+    public init(label: Label, initialMenuTitle: FWMenuItem.Title? = nil, sections: @escaping () -> ([FWMenuSection])) {
         self.label = label
         content = { () -> [FWMenuSection] in
             sections().compactMap { ContentTidier.tidyMenuContent($0) }
@@ -75,65 +75,65 @@ public struct FWMenu<Label: View>: View, FWMenuPresenting {
         _isPresented = Binding<Bool>(get: { false }, set: { _ in })
     }
     
-    public init(title: String, imageSystemName: String, initialMenuTitle: FWMenuItem.MenuTitle? = nil, sections: @escaping () -> ([FWMenuSection])) where Label == Text {
+    public init(title: String, imageSystemName: String, initialMenuTitle: FWMenuItem.Title? = nil, sections: @escaping () -> ([FWMenuSection])) where Label == Text {
         self.init(title: title, image: nil, imageSystemName: imageSystemName, initialMenuTitle: initialMenuTitle, sections: sections)
     }
     
-    public init(title: String, image: Image, initialMenuTitle: FWMenuItem.MenuTitle? = nil, sections: @escaping () -> ([FWMenuSection])) where Label == Text {
+    public init(title: String, image: Image, initialMenuTitle: FWMenuItem.Title? = nil, sections: @escaping () -> ([FWMenuSection])) where Label == Text {
         self.init(title: title, image: image, imageSystemName: nil, initialMenuTitle: initialMenuTitle, sections: sections)
     }
     
-    public init(title: String, initialMenuTitle: FWMenuItem.MenuTitle? = nil, sections: @escaping () -> ([FWMenuSection])) where Label == Text {
+    public init(title: String, initialMenuTitle: FWMenuItem.Title? = nil, sections: @escaping () -> ([FWMenuSection])) where Label == Text {
         self.init(title: title, image: nil, imageSystemName: nil, initialMenuTitle: initialMenuTitle, sections: sections)
     }
     
-    public init(imageSystemName: String, initialMenuTitle: FWMenuItem.MenuTitle? = nil, sections: @escaping () -> ([FWMenuSection])) where Label == Text {
+    public init(imageSystemName: String, initialMenuTitle: FWMenuItem.Title? = nil, sections: @escaping () -> ([FWMenuSection])) where Label == Text {
         self.init(title: nil, image: nil, imageSystemName: imageSystemName, initialMenuTitle: initialMenuTitle, sections: sections)
     }
     
-    public init(image: Image, initialMenuTitle: FWMenuItem.MenuTitle? = nil, sections: @escaping () -> ([FWMenuSection])) where Label == Text {
+    public init(image: Image, initialMenuTitle: FWMenuItem.Title? = nil, sections: @escaping () -> ([FWMenuSection])) where Label == Text {
         self.init(title: nil, image: image, imageSystemName: nil, initialMenuTitle: initialMenuTitle, sections: sections)
     }
     
     
     // MARK: - Initialise with a single FWMenuSection
     
-    public init(label: Label, initialMenuTitle: FWMenuItem.MenuTitle? = nil, items: @escaping () -> (FWMenuSection)) {
+    public init(label: Label, initialMenuTitle: FWMenuItem.Title? = nil, items: @escaping () -> (FWMenuSection)) {
         let sections =  { () -> [FWMenuSection] in
             [items()]
         }
         self.init(label: label, initialMenuTitle: initialMenuTitle, sections: sections)
     }
     
-    public init(title: String, imageSystemName: String, initialMenuTitle: FWMenuItem.MenuTitle? = nil, items: @escaping () -> (FWMenuSection)) where Label == Text {
+    public init(title: String, imageSystemName: String, initialMenuTitle: FWMenuItem.Title? = nil, items: @escaping () -> (FWMenuSection)) where Label == Text {
         let sections =  { () -> [FWMenuSection] in
             [items()]
         }
         self.init(title: title, imageSystemName: imageSystemName, initialMenuTitle: initialMenuTitle, sections: sections)
     }
     
-    public init(title: String, image: Image, initialMenuTitle: FWMenuItem.MenuTitle? = nil, items: @escaping () -> (FWMenuSection)) where Label == Text {
+    public init(title: String, image: Image, initialMenuTitle: FWMenuItem.Title? = nil, items: @escaping () -> (FWMenuSection)) where Label == Text {
         let sections =  { () -> [FWMenuSection] in
             [items()]
         }
         self.init(title: title, image: image, initialMenuTitle: initialMenuTitle, sections: sections)
     }
     
-    public init(title: String, initialMenuTitle: FWMenuItem.MenuTitle? = nil, items: @escaping () -> (FWMenuSection)) where Label == Text {
+    public init(title: String, initialMenuTitle: FWMenuItem.Title? = nil, items: @escaping () -> (FWMenuSection)) where Label == Text {
         let sections =  { () -> [FWMenuSection] in
             [items()]
         }
         self.init(title: title, initialMenuTitle: initialMenuTitle, sections: sections)
     }
     
-    public init(imageSystemName: String, initialMenuTitle: FWMenuItem.MenuTitle? = nil, items: @escaping () -> (FWMenuSection)) where Label == Text {
+    public init(imageSystemName: String, initialMenuTitle: FWMenuItem.Title? = nil, items: @escaping () -> (FWMenuSection)) where Label == Text {
         let sections =  { () -> [FWMenuSection] in
             [items()]
         }
         self.init(imageSystemName: imageSystemName, initialMenuTitle: initialMenuTitle, sections: sections)
     }
     
-    public init(image: Image, initialMenuTitle: FWMenuItem.MenuTitle? = nil, items: @escaping () -> (FWMenuSection)) where Label == Text {
+    public init(image: Image, initialMenuTitle: FWMenuItem.Title? = nil, items: @escaping () -> (FWMenuSection)) where Label == Text {
         let sections =  { () -> [FWMenuSection] in
             [items()]
         }

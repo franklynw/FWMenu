@@ -166,7 +166,7 @@ extension WindowViewController {
         }
     }
     
-    private func showMenu(title: FWMenuItem.MenuTitle?, content: [FWMenuSection], parentMenu: MenuViewController?, position: CGPoint? = nil) -> MenuViewController {
+    private func showMenu(title: FWMenuItem.Title?, content: [FWMenuSection], parentMenu: MenuViewController?, position: CGPoint? = nil) -> MenuViewController {
         
         let menuViewController = UIStoryboard(name: "MenuViewController", bundle: .module).instantiateInitialViewController() as! MenuViewController
         

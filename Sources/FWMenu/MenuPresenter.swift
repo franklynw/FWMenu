@@ -43,8 +43,6 @@ public class MenuPresenter {
             return
         }
         
-        UIApplication.endEditing()
-        
         if let windowScene = appWindow.windowScene {
             
             let newWindow = UIWindow(windowScene: windowScene)

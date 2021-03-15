@@ -21,12 +21,12 @@ public enum FWMenuType {
     /// The standard case
     /// - Parameters:
     ///   - title: an optional title for the menu
-    case standard(title: FWMenuItem.MenuTitle? = nil)
+    case standard(title: FWMenuItem.Title? = nil)
     
     /// The settings case
     /// - Parameters:
     ///   - title: an optional title for the menu
-    case settings(title: FWMenuItem.MenuTitle? = nil)
+    case settings(title: FWMenuItem.Title? = nil)
     
     /// Returns a .standard FWMenuType, with no title
     public static let standard: FWMenuType = .standard()
@@ -39,7 +39,7 @@ public enum FWMenuType {
 // MARK: - Internal
 extension FWMenuType {
     
-    var menuTitle: FWMenuItem.MenuTitle? {
+    var menuTitle: FWMenuItem.Title? {
         switch self {
         case .standard(let title), .settings(let title):
             return title
