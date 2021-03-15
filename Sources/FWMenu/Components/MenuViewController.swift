@@ -40,7 +40,7 @@ class MenuViewController: UIViewController {
     private let sectionHeaderColor = UIColor(red: 0.85, green: 0.85, blue: 0.85, alpha: 1)
     private let defaultBackgroundColor = UIColor(red: 0.95, green: 0.95, blue: 0.95, alpha: 1)
     private let selectedBackgroundColor = UIColor(red: 0.92, green: 0.92, blue: 0.92, alpha: 1)
-    private let minMenuWidth: CGFloat = 250
+    private let minMenuWidth: CGFloat = 200
     private let dragSensitivity: CGFloat = 250 // the lower the number, the more static the user's finger needs to be for the selection to occur
     
     private var menuAccentColor: UIColor? {
@@ -128,8 +128,8 @@ class MenuViewController: UIViewController {
                     maxTextWidth = availableWidth - rowPadding
                     additionalPadding = rowPadding
                 } else {
-                    maxTextWidth = availableWidth - rowPadding - 42
-                    additionalPadding = rowPadding + 42
+                    maxTextWidth = availableWidth - rowPadding - 44
+                    additionalPadding = rowPadding + 44
                 }
                 
                 let size = $1.name.boundingRect(with: CGSize(width: maxTextWidth, height: .greatestFiniteMagnitude), options: .usesLineFragmentOrigin, attributes: [NSAttributedString.Key.font : UIFont.systemFont(ofSize: 17)], context: nil).size
