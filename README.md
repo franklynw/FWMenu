@@ -232,6 +232,6 @@ If anyone can fix this, please let me know!
 Requires CGExtensions, which is linked. GitHub page is [here](https://github.com/franklynw/CGExtensions)
 
 
-## License  
+## Licence  
 
-`FWMenu` is available under the MIT license.
+`FWMenu` is available under the MIT licence.

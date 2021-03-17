@@ -11,6 +11,7 @@ import CGExtensions
 
 class MenuViewController: UIViewController {
     
+    @IBOutlet weak var blurredBackgroundImageView: UIImageView!
     @IBOutlet weak var tableView: UITableView!
     
     weak var containingView: UIView?
@@ -23,6 +24,7 @@ class MenuViewController: UIViewController {
     var font: Font?
     var isTopMenu = true
     var selectedItem: IndexPath?
+    var getBackgroundImage: ((MenuViewController) -> UIImage?)!
     var showSubmenu: ((MenuViewController, FWMenuItem, CGPoint) -> ())!
     var finished: (() -> ())!
     
@@ -33,15 +35,17 @@ class MenuViewController: UIViewController {
     }
     
     private var menuHeaderView: MenuHeaderView?
+    private var menuBackgroundColor: UIColor?
     private var isScrollingEnabled = true
     private var done = false
     
-    private let sectionHeaderHeight: CGFloat = 7
-    private let sectionHeaderColor = UIColor(red: 0.85, green: 0.85, blue: 0.85, alpha: 1)
-    private let defaultBackgroundColor = UIColor(red: 0.95, green: 0.95, blue: 0.95, alpha: 1)
-    private let selectedBackgroundColor = UIColor(red: 0.92, green: 0.92, blue: 0.92, alpha: 1)
-    private let minMenuWidth: CGFloat = 200
-    private let dragSensitivity: CGFloat = 250 // the lower the number, the more static the user's finger needs to be for the selection to occur
+    private static let defaultBackgroundColor = UIColor(red: 0.95, green: 0.95, blue: 0.95, alpha: 1)
+    private static let selectedBackgroundColor = UIColor(red: 0.92, green: 0.92, blue: 0.92, alpha: 1)
+    static let sectionHeaderColor = UIColor(red: 0.75, green: 0.75, blue: 0.75, alpha: 0.5)
+    
+    private static let sectionHeaderHeight: CGFloat = 7
+    private static let minMenuWidth: CGFloat = 200
+    private static let dragSensitivity: CGFloat = 250 // the lower the number, the more static the user's finger needs to be for the selection to occur
     
     private var menuAccentColor: UIColor? {
         guard let accentColor = accentColor else {
@@ -56,21 +60,16 @@ class MenuViewController: UIViewController {
         super.viewDidLoad()
         
         if let contentBackgroundColor = contentBackgroundColor {
-            view.backgroundColor = UIColor(contentBackgroundColor).withAlphaComponent(0.9)
-            tableView.backgroundColor = UIColor(contentBackgroundColor).withAlphaComponent(0.9)
+            menuBackgroundColor = UIColor(contentBackgroundColor).withAlphaComponent(0.9)
         } else {
-            view.backgroundColor = defaultBackgroundColor
-            tableView.backgroundColor = defaultBackgroundColor
+            menuBackgroundColor = Self.defaultBackgroundColor
         }
         
         view.layer.cornerRadius = 15
         view.layer.shadowRadius = 50
         view.layer.shadowColor = UIColor.black.cgColor
         view.layer.shadowOpacity = 0.2
-        view.layer.masksToBounds = false
-        
-        tableView.layer.cornerRadius = 15
-        tableView.layer.masksToBounds = true
+        view.layer.masksToBounds = true
         
         tableView.delegate = self
         tableView.dataSource = self
@@ -78,6 +77,11 @@ class MenuViewController: UIViewController {
         if let menuHeaderView = menuHeaderView {
             tableView.tableHeaderView = menuHeaderView
         }
+    }
+    
+    override func viewDidAppear(_ animated: Bool) {
+        super.viewDidAppear(animated)
+        self.blurredBackgroundImageView.image = self.getBackgroundImage(self)
     }
     
     override func viewWillLayoutSubviews() {
@@ -96,7 +100,7 @@ class MenuViewController: UIViewController {
     var menuSize: CGSize {
         
         if let menuTitle = menuTitle {
-            menuHeaderView = MenuHeaderView(title: menuTitle, backgroundColor: sectionHeaderColor.withAlphaComponent(0.4), menuAccentColor: menuAccentColor)
+            menuHeaderView = MenuHeaderView(title: menuTitle, backgroundColor: Self.sectionHeaderColor.withAlphaComponent(0.4), menuAccentColor: menuAccentColor)
         }
         
         let screenSize = UIScreen.main.bounds.size
@@ -140,11 +144,11 @@ class MenuViewController: UIViewController {
                 return $0 + height
             }
             
-            return $0 + sectionHeight + sectionHeaderHeight
+            return $0 + sectionHeight + Self.sectionHeaderHeight
         }
         
-        let width = min(max(maxWidth, minMenuWidth), availableWidth)
-        let height = min(totalHeight - sectionHeaderHeight, availableHeight)
+        let width = min(max(maxWidth, Self.minMenuWidth), availableWidth)
+        let height = min(totalHeight - Self.sectionHeaderHeight, availableHeight)
         
         isScrollingEnabled = totalHeight > availableHeight
         
@@ -179,6 +183,7 @@ class MenuViewController: UIViewController {
             selectRow(at: indexPath)
         case .changed:
             guard !isScrollingEnabled, !done else {
+                selectRow(at: nil)
                 return
             }
             selectRow(at: indexPath)
@@ -187,7 +192,7 @@ class MenuViewController: UIViewController {
             selectRow(at: nil)
             self.fullSize()
             
-            guard !isScrollingEnabled, !done, let indexPath = indexPath, indexPath.row > -1, gestureRecognizer.velocity(in: tableView).magnitude < dragSensitivity else {
+            guard !isScrollingEnabled, !done, let indexPath = indexPath, indexPath.row > -1, gestureRecognizer.velocity(in: tableView).magnitude < Self.dragSensitivity else {
                 return
             }
                 
@@ -204,6 +209,42 @@ class MenuViewController: UIViewController {
         }
         
         dropBackIfNecessary(touchLocation: gestureRecognizer.location(in: containingView))
+    }
+    
+    func userPressed(_ gestureRecognizer: UILongPressGestureRecognizer) {
+        
+        let touchLocation = gestureRecognizer.location(in: view)
+        let indexPath = self.indexPath(forRowAtOffset: touchLocation)
+        
+        switch gestureRecognizer.state {
+        case .began:
+            guard let indexPath = indexPath else {
+                if !done {
+                    done = true
+                    finished()
+                }
+                return
+            }
+            selectRow(at: indexPath)
+        case .ended:
+            
+            selectRow(at: nil)
+            self.fullSize()
+            
+            guard let indexPath = indexPath, indexPath.row > -1 else {
+                return
+            }
+                
+            let cellRect = tableView.rectForRow(at: indexPath)
+            let cellPosition = CGPoint(x: cellRect.midX, y: cellRect.midY)
+            let positionInSuperview = tableView.convert(cellPosition, to: containingView)
+            
+            let menuItem = menuContent[indexPath.section].menuItems[indexPath.row]
+            menuItemWasTapped(menuItem, indexPath: indexPath, position: positionInSuperview)
+            
+        default:
+            break
+        }
     }
     
     func refreshContent(_ content: [FWMenuSection]) {
@@ -247,10 +288,14 @@ extension MenuViewController {
     private func selectRow(at indexPath: IndexPath?) {
         
         if let selectedItem = selectedItem, selectedItem != indexPath {
-            tableView.deselectRow(at: selectedItem, animated: false)
+            if let cell = tableView.cellForRow(at: selectedItem) as? MenuRowCell {
+                cell.deselect()
+            }
         }
         if let indexPath = indexPath, indexPath.row > -1 {
-            tableView.selectRow(at: indexPath, animated: false, scrollPosition: .none)
+            if let cell = tableView.cellForRow(at: indexPath) as? MenuRowCell {
+                cell.select()
+            }
             if indexPath != selectedItem {
                 UIImpactFeedbackGenerator(style: .light).impactOccurred(intensity: 0.5)
             }
@@ -263,18 +308,19 @@ extension MenuViewController {
         }
     }
     
-    private func indexPath(forRowAtOffset offset: CGPoint) -> IndexPath? {
+    private func indexPath(forRowAtOffset touchOffset: CGPoint) -> IndexPath? {
         
         // don't know if there's a better way of finding the row for a particular y position, when there are varying row heights
         // in any case, this is super quick as it's just a binary search
         
-        guard offset.x > 0 && offset.x < tableView.frame.width else {
+        guard touchOffset.x > 0 && touchOffset.x < tableView.frame.width else {
             return nil
         }
-        guard offset.y > 0 && offset.y < tableView.frame.height else {
+        guard touchOffset.y > 0 && touchOffset.y < tableView.frame.height else {
             return nil
         }
         
+        let offset = CGPoint(x: touchOffset.x, y: touchOffset.y + tableView.contentOffset.y)
         let tableHeight = tableView.contentSize.height
         let totalRows = menuContent.reduce(0) { $0 + $1.menuItems.count }
         let sectionsCount = menuContent.count
@@ -306,7 +352,7 @@ extension MenuViewController {
             }
             
             if let indexPath = indexPath, indexPath.row >= 0 {
-                let rowRect = tableView.rectForRow(at: indexPath).inset(by: UIEdgeInsets(top: indexPath.row == 0 ? -sectionHeaderHeight : 0, left: 0, bottom: 0, right: 0))
+                let rowRect = tableView.rectForRow(at: indexPath).inset(by: UIEdgeInsets(top: indexPath.row == 0 ? -Self.sectionHeaderHeight : 0, left: 0, bottom: 0, right: 0))
                 if offset.y < rowRect.minY {
                     guess -= step
                 } else if offset.y > rowRect.maxY {
@@ -398,14 +444,16 @@ extension MenuViewController: UITableViewDelegate, UITableViewDataSource {
         
         let rowPosition: MenuRowCell.RowPosition
         
-        if indexPath.section == menuContent.count - 1, indexPath.row == menuContent[menuContent.count - 1].menuItems.count - 1 {
+        if indexPath.section == 0, indexPath.row == 0 {
+            rowPosition = .top
+        } else if indexPath.section == menuContent.count - 1, indexPath.row == menuContent[menuContent.count - 1].menuItems.count - 1 {
             rowPosition = .bottom
         } else {
             rowPosition = .other
         }
         
         let menuItem = menuContent[indexPath.section].menuItems[indexPath.row]
-        cell.configure(with: menuItem, accentColor: menuAccentColor, font: font?.uiFont(), rowPosition: rowPosition, containingView: containingView) { [weak self, weak tableView] in
+        cell.configure(with: menuItem, accentColor: menuAccentColor, backgroundColor: menuBackgroundColor, font: font?.uiFont(), rowPosition: rowPosition, containingView: containingView) { [weak self, weak tableView] in
             
             guard let self = self, let tableView = tableView else {
                 return
@@ -418,26 +466,16 @@ extension MenuViewController: UITableViewDelegate, UITableViewDataSource {
             self.menuItemWasTapped(menuItem, indexPath: indexPath, position: CGPoint(x: positionInSuperview.x, y: positionInSuperview.y - cellRect.height / 2))
         }
         
-        let bgView = UIView()
-        
-        if let contentBackgroundColor = contentBackgroundColor {
-            bgView.backgroundColor = UIColor(contentBackgroundColor)
-        } else {
-            bgView.backgroundColor = selectedBackgroundColor
-        }
-        
-        cell.selectedBackgroundView = bgView
-        
         return cell
     }
     
     func tableView(_ tableView: UITableView, viewForHeaderInSection section: Int) -> UIView? {
-        let view = UIView(frame: CGRect(origin: .zero, size: CGSize(width: UIScreen.main.bounds.width, height: sectionHeaderHeight)))
-        view.backgroundColor = sectionHeaderColor
+        let view = UIView(frame: CGRect(origin: .zero, size: CGSize(width: UIScreen.main.bounds.width, height: Self.sectionHeaderHeight)))
+        view.backgroundColor = Self.sectionHeaderColor
         return view
     }
     
     func tableView(_ tableView: UITableView, heightForHeaderInSection section: Int) -> CGFloat {
-        return section == 0 ? 0 : sectionHeaderHeight
+        return section == 0 ? 0 : Self.sectionHeaderHeight
     }
 }

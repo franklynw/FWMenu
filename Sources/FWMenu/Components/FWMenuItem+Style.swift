@@ -52,7 +52,6 @@ extension FWMenuItem.Style {
             titleLabel.font = menuFont
             titleLabel.textColor = color
             icon?.tintColor = color
-            backgroundView?.backgroundColor = .clear
             
         case .styled(let font, let textColor, let iconColor, let backgroundColor):
             
@@ -65,8 +64,6 @@ extension FWMenuItem.Style {
             icon?.tintColor = UIColor(iconColor ?? textColor ?? Color(.label))
             if let backgroundColor = backgroundColor {
                 backgroundView?.backgroundColor = UIColor(backgroundColor)
-            } else {
-                backgroundView?.backgroundColor = .clear
             }
             
         case .uiStyled(let font, let textColor, let iconColor, let backgroundColor):
@@ -78,7 +75,9 @@ extension FWMenuItem.Style {
             }
             titleLabel.textColor = textColor ?? .label
             icon?.tintColor = iconColor ?? textColor
-            backgroundView?.backgroundColor = backgroundColor ?? .clear
+            if let backgroundColor = backgroundColor {
+                backgroundView?.backgroundColor = backgroundColor
+            }
         }
     }
     

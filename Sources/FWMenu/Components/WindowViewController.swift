@@ -65,6 +65,12 @@ class WindowViewController: UIViewController {
             self?.menuViewControllers.last?.userPanned(recognizer)
         }
         view.addGestureRecognizer(panGestureRecognizer)
+        
+        let longPressGestureRecognizer: UILongPressGestureRecognizer = .gestureRecognizer(delegate: self) { [weak self] recognizer in
+            self?.menuViewControllers.last?.userPressed(recognizer)
+        }
+        longPressGestureRecognizer.minimumPressDuration = 0.2
+        view.addGestureRecognizer(longPressGestureRecognizer)
     }
     
     func dismissMenu(completion: ((Bool) -> ())? = nil) {
@@ -182,6 +188,10 @@ extension WindowViewController {
             self?.showSubMenu(from: menu, menuItem: menuItem, position: position)
         }
         
+        menuViewController.getBackgroundImage = { [weak self] menuViewController in
+            return self?.getBackgroundImage(for: menuViewController)
+        }
+        
         menuViewController.finished = { [weak self] in
             switch self?.menuType {
             case .standard:
@@ -242,7 +252,8 @@ extension WindowViewController {
             height = availableBottomSpace - menuPadding
         }
         
-        menuViewController.view.frame = CGRect(origin: CGPoint(x: x, y: y), size: CGSize(width: menuSize.width, height: height))
+        let menuFrame = CGRect(origin: CGPoint(x: x, y: y), size: CGSize(width: menuSize.width, height: height))
+        menuViewController.view.frame = menuFrame
         
         let scale = CGAffineTransform(scaleX: 0.01, y: 0.01)
         let translate: CGAffineTransform
@@ -345,6 +356,30 @@ extension WindowViewController {
                 $0.element.baseScale = 1 - CGFloat($0.offset) * 0.1
             }
         }
+    }
+    
+    private func getBackgroundImage(for menuViewController: MenuViewController) -> UIImage? {
+        
+        let rect = menuViewController.view.frame
+        let screenView = UIScreen.main.snapshotView(afterScreenUpdates: true)
+            
+        let visualEffectView = UIVisualEffectView(effect: UIBlurEffect(style: .regular))
+        visualEffectView.frame = screenView.bounds
+        screenView.addSubview(visualEffectView)
+        
+        let renderer = UIGraphicsImageRenderer(size: UIScreen.main.bounds.size)
+        let image = renderer.image { context in
+            screenView.drawHierarchy(in: UIScreen.main.bounds, afterScreenUpdates: true)
+        }
+        
+        let scale = image.scale
+        let scaledRect = CGRect(origin: CGPoint(x: rect.origin.x * scale, y: rect.origin.y * scale), size: CGSize(width: rect.size.width * scale, height: rect.size.height * scale))
+        
+        guard let cgImage = image.cgImage, let cropped = cgImage.cropping(to: scaledRect) else {
+            return nil
+        }
+        
+        return UIImage(cgImage: cropped)
     }
     
     private func removeViewController(_ viewController: UIViewController?) {
