@@ -222,6 +222,44 @@ Setting this to true will show the menu. You can pass in a source rect for the m
 This is somewhat in Beta, so there may be issues I'm unaware of.
 
 
+## MenuPresenter
+
+The class behind everything is the MenuPresenter, which has some static functions which can be accessed directly if required. These are -
+
+* Present from the Navigation Bar, with an x value which is relative to the screen width (0 is fully left, 1 is fully right)
+
+```swift
+static func presentFromNavBar(parent: FWMenuPresenting, withRelativeX relativeX: CGFloat)
+```
+
+* Present from a source rect
+
+```swift
+static func present(parent: FWMenuPresenting, with buttonFrame: CGRect?)
+```
+
+* Programmatically dismiss any menu, with an action to invoke on completion (normally this is when the menu item action would be invoked)
+
+```swift
+static func dismiss(_ action: Action? = nil)
+```
+
+The 'present' functions require that you implement the FWMenuPresenting protocol, which is hidden from you when you use FWMenu or FWMenuPresenter -
+
+### FWMenuPresenting
+
+```swift
+var content: () -> ([FWMenuSection]) { get }
+var menuType: FWMenuType { get }
+var contentBackgroundColor: Color? { get }
+var contentAccentColor: Color? { get }
+var font: Font? { get }
+var hideMenuOnDeviceRotation: Bool { get }
+```
+
+There are default implementations of menuType (.standard) and hideMenuOnDeviceRotation (false).
+
+
 ## Issues
 
 Currently, the menu button works properly if it is an image only. There is an issue where the GeometryReader masks the content size of more complex buttons and they don't display properly.

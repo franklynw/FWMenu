@@ -10,6 +10,8 @@ import SwiftUI
 
 class WindowViewController: UIViewController {
     
+    typealias Action = () -> ()
+    
     static let menuPadding: CGFloat = 8
     
     var menuContent: (() -> [FWMenuSection])!
@@ -19,7 +21,7 @@ class WindowViewController: UIViewController {
     var accentColor: Color?
     var font: Font?
     var hideMenuOnDeviceRotation = false
-    var finished: (() -> ())!
+    var finished: ((Action?) -> ())!
     var dismiss: ((((Bool) -> ())?) -> ())?
     var replace: ((((Bool) -> ())?) -> ())?
     
@@ -106,7 +108,7 @@ extension WindowViewController {
         }
     }
     
-    private func dismissLevel() {
+    private func dismissLevel(_ action: Action?) {
         
         var content: [FWMenuSection]? = self.menuContent()
         
@@ -163,7 +165,7 @@ extension WindowViewController {
             }
             
             guard let topMenu = self.menuViewControllers.last else {
-                self.finished()
+                self.finished(action)
                 return
             }
             
@@ -192,12 +194,12 @@ extension WindowViewController {
             return self?.getBackgroundImage(for: menuViewController)
         }
         
-        menuViewController.finished = { [weak self] in
+        menuViewController.finished = { [weak self] action in
             switch self?.menuType {
             case .standard:
-                self?.finished()
+                self?.finished(action)
             case .settings:
-                self?.dismissLevel()
+                self?.dismissLevel(action)
             case .none:
                 break
             }

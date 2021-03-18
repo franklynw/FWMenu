@@ -11,6 +11,8 @@ import CGExtensions
 
 class MenuViewController: UIViewController {
     
+    typealias Action = () -> ()
+    
     @IBOutlet weak var blurredBackgroundImageView: UIImageView!
     @IBOutlet weak var tableView: UITableView!
     
@@ -26,7 +28,7 @@ class MenuViewController: UIViewController {
     var selectedItem: IndexPath?
     var getBackgroundImage: ((MenuViewController) -> UIImage?)!
     var showSubmenu: ((MenuViewController, FWMenuItem, CGPoint) -> ())!
-    var finished: (() -> ())!
+    var finished: ((Action?) -> ())!
     
     var baseScale: CGFloat = 1 {
         didSet {
@@ -173,7 +175,7 @@ class MenuViewController: UIViewController {
             guard let indexPath = indexPath else {
                 if !done {
                     done = true
-                    finished()
+                    finished(nil)
                 }
                 return
             }
@@ -221,7 +223,7 @@ class MenuViewController: UIViewController {
             guard let indexPath = indexPath else {
                 if !done {
                     done = true
-                    finished()
+                    finished(nil)
                 }
                 return
             }
@@ -278,8 +280,7 @@ extension MenuViewController {
             selectedItem = indexPath
             showSubmenu(self, menuItem, position)
         } else {
-            menuItem.action()
-            finished()
+            finished(menuItem.action)
         }
         
         isTopMenu = false
