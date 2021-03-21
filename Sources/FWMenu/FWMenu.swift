@@ -27,6 +27,7 @@ public struct FWMenu<Label: View>: View, FWMenuPresenting {
     
     var accentColor: Color?
     var hidePolicy: HidePolicy = .alwaysShow
+    var pressed: (() -> ())?
     
     private let label: Label?
     private let image: Image?
@@ -194,8 +195,12 @@ public struct FWMenu<Label: View>: View, FWMenuPresenting {
             GeometryReader { geometry in
                 Button(
                     action: {
-                        let frame = geometry.frame(in: .named(MenuCoordinateSpaceModifier.menuCoordinateSpaceName))
-                        present(with: frame)
+                        if let pressed = pressed {
+                            pressed()
+                        } else {
+                            let frame = geometry.frame(in: .named(MenuCoordinateSpaceModifier.menuCoordinateSpaceName))
+                            present(with: frame)
+                        }
                     }, label: {
                         buttonLabel()
                     }
@@ -214,9 +219,11 @@ public struct FWMenu<Label: View>: View, FWMenuPresenting {
     
     /// Binds to an isPresented Bool so the menu can be presented programmatically
     /// - Parameter isPresented: a binding to a Bool value
-    public func present(isPresented: Binding<Bool>) -> Self {
+    /// - Parameter pressed: if you provide a pressed action here, it prevents the menu from being displayed when the button is pressed, and will instead rely on the isPresented binding (which could be triggered by the pressed action)
+    public func present(isPresented: Binding<Bool>, pressed: (() -> ())? = nil) -> Self {
         var copy = self
         copy._isPresented = isPresented
+        copy.pressed = pressed
         return copy
     }
     

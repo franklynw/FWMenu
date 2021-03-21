@@ -194,11 +194,13 @@ FWMenu(imageSystemName: "chevron.down", items: viewModel.menuContent)
 
 ### Present Menu programmatically
 
-As a bonus, menus can be presented programmatically. This will simply present the menu from the button as if it had been pressed.
+As a bonus, menus can be presented programmatically. This will simply present the menu from the button as if it had been pressed. If you provide a pressed closure, then pressing the button no longer presents the menu, relying totally on the isPresented binding.
 
 ```swift
 FWMenu(imageSystemName: "chevron.down", items: viewModel.menuContent)
-    .present(isPresented: $viewModel.isMenuPresented)
+    .present(isPresented: $viewModel.isMenuPresented) {
+        // maybe do something (possibly async) which presents the menu by setting isPresented to true
+    }
 ```
 
 
