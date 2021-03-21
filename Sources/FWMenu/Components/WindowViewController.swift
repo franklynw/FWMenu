@@ -110,6 +110,10 @@ extension WindowViewController {
     
     private func dismissLevel(_ action: Action?) {
         
+        if menuViewControllers.count > 1 {
+            action?()
+        }
+        
         var content: [FWMenuSection]? = self.menuContent()
         
         removeTopMenu { [weak self] _ in
