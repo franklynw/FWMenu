@@ -376,7 +376,7 @@ extension WindowViewController {
                 return nil
             }
             
-            UIApplication.window?.layer.render(in: context)
+            UIApplication.shared.windows.first?.layer.render(in: context)
             let screenImage = UIGraphicsGetImageFromCurrentImageContext()
             UIGraphicsEndImageContext()
             
