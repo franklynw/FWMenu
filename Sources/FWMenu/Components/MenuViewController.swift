@@ -14,6 +14,8 @@ class MenuViewController: UIViewController {
     typealias Action = () -> ()
     
     @IBOutlet weak var blurredBackgroundImageView: UIImageView!
+    @IBOutlet weak var headerContainerView: UIView!
+    @IBOutlet weak var headerContainerHeightConstraint: NSLayoutConstraint!
     @IBOutlet weak var tableView: UITableView!
     
     weak var containingView: UIView?
@@ -37,6 +39,7 @@ class MenuViewController: UIViewController {
     }
     
     private var menuHeaderView: MenuHeaderView?
+    private var headerHeight: CGFloat = 0
     private var menuBackgroundColor: UIColor?
     private var isScrollingEnabled = true
     private var done = false
@@ -77,27 +80,29 @@ class MenuViewController: UIViewController {
         tableView.dataSource = self
         
         if let menuHeaderView = menuHeaderView {
-            tableView.tableHeaderView = menuHeaderView
+            
+            menuHeaderView.translatesAutoresizingMaskIntoConstraints = false
+            headerContainerView.addSubview(menuHeaderView)
+            
+            headerContainerHeightConstraint.isActive = false
+            
+            let constraints: [NSLayoutConstraint] = [
+                menuHeaderView.topAnchor.constraint(equalTo: headerContainerView.topAnchor),
+                menuHeaderView.bottomAnchor.constraint(equalTo: headerContainerView.bottomAnchor),
+                menuHeaderView.leadingAnchor.constraint(equalTo: headerContainerView.leadingAnchor),
+                menuHeaderView.trailingAnchor.constraint(equalTo: headerContainerView.trailingAnchor)
+            ]
+            
+            NSLayoutConstraint.activate(constraints)
+            
+            headerHeight = menuHeaderView.size.height
         }
     }
     
-    override func viewDidAppear(_ animated: Bool) {
-        super.viewDidAppear(animated)
+    override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
         self.blurredBackgroundImageView.image = self.getBackgroundImage(self)
     }
-    
-    override func viewWillLayoutSubviews() {
-        
-        super.viewWillLayoutSubviews()
-        
-        guard let menuHeaderView = menuHeaderView else {
-            return
-        }
-        
-        let menuHeaderHeight = menuHeaderView.systemLayoutSizeFitting(UIView.layoutFittingCompressedSize).height
-        menuHeaderView.frame = CGRect(origin: menuHeaderView.frame.origin, size: CGSize(width: menuHeaderView.frame.width, height: menuHeaderHeight))
-    }
-    
     
     var menuSize: CGSize {
         
@@ -317,11 +322,11 @@ extension MenuViewController {
         guard touchOffset.x > 0 && touchOffset.x < tableView.frame.width else {
             return nil
         }
-        guard touchOffset.y > 0 && touchOffset.y < tableView.frame.height else {
+        guard touchOffset.y > headerHeight && touchOffset.y < tableView.frame.height + headerHeight else {
             return nil
         }
         
-        let offset = CGPoint(x: touchOffset.x, y: touchOffset.y + tableView.contentOffset.y)
+        let offset = CGPoint(x: touchOffset.x, y: touchOffset.y + tableView.contentOffset.y - headerHeight)
         let tableHeight = tableView.contentSize.height
         let totalRows = menuContent.reduce(0) { $0 + $1.menuItems.count }
         let sectionsCount = menuContent.count

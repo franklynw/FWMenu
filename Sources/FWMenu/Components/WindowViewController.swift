@@ -29,6 +29,7 @@ class WindowViewController: UIViewController {
     private var isSetup = false
     private var deviceOrientation = UIDevice.current.orientation
     private var orientationObserver: NSObjectProtocol?
+    private var screenImage: UIImage?
     
     
     deinit {
@@ -367,21 +368,42 @@ extension WindowViewController {
     private func getBackgroundImage(for menuViewController: MenuViewController) -> UIImage? {
         
         let rect = menuViewController.view.frame
-        let screenView = UIScreen.main.snapshotView(afterScreenUpdates: true)
+        
+        let screenImage: UIImage? = self.screenImage ?? {
+        
+            UIGraphicsBeginImageContextWithOptions(UIScreen.main.bounds.size, true, UIScreen.main.scale)
+            guard let context = UIGraphicsGetCurrentContext() else {
+                return nil
+            }
+            
+            UIApplication.window?.layer.render(in: context)
+            let screenImage = UIGraphicsGetImageFromCurrentImageContext()
+            UIGraphicsEndImageContext()
+            
+            self.screenImage = screenImage
+            
+            return screenImage
+        }()
+        
+        guard let image = screenImage else {
+            return nil
+        }
+        
+        let imageView = UIImageView(image: image)
             
         let visualEffectView = UIVisualEffectView(effect: UIBlurEffect(style: .regular))
-        visualEffectView.frame = screenView.bounds
-        screenView.addSubview(visualEffectView)
+        visualEffectView.frame = imageView.bounds
+        imageView.addSubview(visualEffectView)
         
         let renderer = UIGraphicsImageRenderer(size: UIScreen.main.bounds.size)
-        let image = renderer.image { context in
-            screenView.drawHierarchy(in: UIScreen.main.bounds, afterScreenUpdates: true)
+        let blurredImage = renderer.image { context in
+            imageView.drawHierarchy(in: UIScreen.main.bounds, afterScreenUpdates: true)
         }
         
         let scale = image.scale
         let scaledRect = CGRect(origin: CGPoint(x: rect.origin.x * scale, y: rect.origin.y * scale), size: CGSize(width: rect.size.width * scale, height: rect.size.height * scale))
         
-        guard let cgImage = image.cgImage, let cropped = cgImage.cropping(to: scaledRect) else {
+        guard let cgImage = blurredImage.cgImage, let cropped = cgImage.cropping(to: scaledRect) else {
             return nil
         }
         
