@@ -66,4 +66,10 @@ extension FWMenu {
         copy.menuType = .settings(title: menuTitle)
         return copy
     }
+    
+    public func getFrame(getFrame: @escaping (CGRect) -> ()) -> Self {
+        var copy = self
+        copy.getFrame = getFrame
+        return copy
+    }
 }

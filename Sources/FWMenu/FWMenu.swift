@@ -28,6 +28,7 @@ public struct FWMenu<Label: View>: View, FWMenuPresenting {
     var accentColor: Color?
     var hidePolicy: HidePolicy = .alwaysShow
     var pressed: (() -> ())?
+    var getFrame: ((CGRect) -> ())?
     
     private let label: Label?
     private let image: Image?
@@ -207,6 +208,9 @@ public struct FWMenu<Label: View>: View, FWMenuPresenting {
                 )
                 .frame(width: geometry.frame(in: .local).width, height: geometry.frame(in: .local).height)
                 .opacity(content().isEmpty ? hidePolicy.opacity : 1)
+                .onAppear {
+                    getFrame?(geometry.frame(in: .named(MenuCoordinateSpaceModifier.menuCoordinateSpaceName)))
+                }
                 
                 DoIf($isPresented) {
                     let frame = geometry.frame(in: .named(MenuCoordinateSpaceModifier.menuCoordinateSpaceName))
