@@ -10,7 +10,7 @@ import SwiftUI
 
 class MenuHeaderView: UIView {
     
-    private let title: FWMenuItem.MenuTitle
+    private let title: FWMenuItem.Title
     
     var size: CGSize {
         
@@ -38,7 +38,7 @@ class MenuHeaderView: UIView {
     }
     
     
-    init(title: FWMenuItem.MenuTitle, backgroundColor: UIColor, menuAccentColor: UIColor?) {
+    init(title: FWMenuItem.Title, backgroundColor: UIColor, menuAccentColor: UIColor?) {
         
         self.title = title
         

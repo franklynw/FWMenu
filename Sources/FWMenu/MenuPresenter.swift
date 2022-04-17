@@ -6,9 +6,12 @@
 //
 
 import SwiftUI
+import ActionGestureRecognizer
 
 
 public class MenuPresenter {
+    
+    public typealias Action = () -> ()
     
     private static var window: UIWindow?
     private static var viewController: WindowViewController?
@@ -42,8 +45,6 @@ public class MenuPresenter {
         guard !parent.content().isEmpty else {
             return
         }
-        
-        UIApplication.endEditing()
         
         if let windowScene = appWindow.windowScene {
             
@@ -82,10 +83,10 @@ public class MenuPresenter {
 }
 
 
-// MARK: - Internal
 extension MenuPresenter {
     
-    static func dismiss() {
+    /// Use this to programmatically dismiss the menu if required
+    public static func dismiss(_ action: Action? = nil) {
         
         guard window != nil else {
             return
@@ -99,6 +100,7 @@ extension MenuPresenter {
             } completion: { _ in
                 window = nil
                 viewController = nil
+                action?()
             }
         }
     }

@@ -16,6 +16,16 @@
                         <rect key="frame" x="0.0" y="0.0" width="320" height="568"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <subviews>
+                            <imageView clipsSubviews="YES" userInteractionEnabled="NO" contentMode="scaleToFill" horizontalHuggingPriority="251" verticalHuggingPriority="251" translatesAutoresizingMaskIntoConstraints="NO" id="3VQ-mt-Bec">
+                                <rect key="frame" x="0.0" y="0.0" width="320" height="568"/>
+                            </imageView>
+                            <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="PcS-bU-jak">
+                                <rect key="frame" x="0.0" y="0.0" width="320" height="0.0"/>
+                                <color key="backgroundColor" white="0.0" alpha="0.0" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+                                <constraints>
+                                    <constraint firstAttribute="height" id="i7i-tB-Gob"/>
+                                </constraints>
+                            </view>
                             <tableView clipsSubviews="YES" contentMode="scaleToFill" alwaysBounceVertical="YES" showsHorizontalScrollIndicator="NO" showsVerticalScrollIndicator="NO" dataMode="prototypes" style="plain" separatorStyle="none" rowHeight="-1" estimatedRowHeight="-1" sectionHeaderHeight="28" sectionFooterHeight="28" translatesAutoresizingMaskIntoConstraints="NO" id="POu-cS-Kvr">
                                 <rect key="frame" x="0.0" y="0.0" width="320" height="568"/>
                                 <prototypes>
@@ -28,7 +38,19 @@
                                             <subviews>
                                                 <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="8X4-O9-YRe">
                                                     <rect key="frame" x="0.0" y="0.0" width="320" height="43"/>
+                                                    <subviews>
+                                                        <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="aOl-6v-ULB">
+                                                            <rect key="frame" x="0.0" y="0.0" width="320" height="43"/>
+                                                            <color key="backgroundColor" white="0.0" alpha="0.0" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+                                                        </view>
+                                                    </subviews>
                                                     <color key="backgroundColor" systemColor="systemGroupedBackgroundColor"/>
+                                                    <constraints>
+                                                        <constraint firstAttribute="bottom" secondItem="aOl-6v-ULB" secondAttribute="bottom" id="2Ma-te-EbA"/>
+                                                        <constraint firstItem="aOl-6v-ULB" firstAttribute="leading" secondItem="8X4-O9-YRe" secondAttribute="leading" id="Id3-KG-VS0"/>
+                                                        <constraint firstItem="aOl-6v-ULB" firstAttribute="top" secondItem="8X4-O9-YRe" secondAttribute="top" id="Q1P-5u-tz3"/>
+                                                        <constraint firstAttribute="trailing" secondItem="aOl-6v-ULB" secondAttribute="trailing" id="ro2-YB-SFJ"/>
+                                                    </constraints>
                                                 </view>
                                                 <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="Heo-zA-LLg">
                                                     <rect key="frame" x="0.0" y="42.5" width="320" height="0.5"/>
@@ -71,7 +93,10 @@
                                         </tableViewCellContentView>
                                         <color key="backgroundColor" white="0.0" alpha="0.0" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
                                         <connections>
+                                            <outlet property="backgroundBottomConstraint" destination="3ye-5o-n5L" id="asW-I9-XVB"/>
                                             <outlet property="backgroundColorView" destination="8X4-O9-YRe" id="9hE-os-Gyw"/>
+                                            <outlet property="backgroundDarkeningView" destination="aOl-6v-ULB" id="THD-Xo-LoS"/>
+                                            <outlet property="backgroundTopConstraint" destination="jFx-jR-Crh" id="pgw-vd-53b"/>
                                             <outlet property="iconImage" destination="Sdd-ey-vPF" id="vXU-LS-MAP"/>
                                             <outlet property="lineView" destination="Heo-zA-LLg" id="O6u-lb-73Q"/>
                                             <outlet property="titleImageConstraint" destination="rtL-YB-VL0" id="5XW-8I-veJ"/>
@@ -85,13 +110,23 @@
                         <viewLayoutGuide key="safeArea" id="3Q1-Rm-V2M"/>
                         <color key="backgroundColor" systemColor="systemBackgroundColor"/>
                         <constraints>
+                            <constraint firstItem="3VQ-mt-Bec" firstAttribute="top" secondItem="cLs-f2-2P7" secondAttribute="top" id="IMj-5n-0eT"/>
                             <constraint firstAttribute="bottom" secondItem="POu-cS-Kvr" secondAttribute="bottom" id="Ish-5K-LFC"/>
-                            <constraint firstItem="POu-cS-Kvr" firstAttribute="top" secondItem="cLs-f2-2P7" secondAttribute="top" id="LEa-ZO-lao"/>
                             <constraint firstAttribute="trailing" secondItem="POu-cS-Kvr" secondAttribute="trailing" id="OCx-72-tYz"/>
+                            <constraint firstItem="POu-cS-Kvr" firstAttribute="top" secondItem="PcS-bU-jak" secondAttribute="bottom" id="RTT-s6-3yb"/>
+                            <constraint firstItem="3VQ-mt-Bec" firstAttribute="trailing" secondItem="cLs-f2-2P7" secondAttribute="trailing" id="Zu3-8a-JkX"/>
+                            <constraint firstItem="3VQ-mt-Bec" firstAttribute="bottom" secondItem="cLs-f2-2P7" secondAttribute="bottom" id="bfu-mS-t29"/>
+                            <constraint firstAttribute="trailing" secondItem="PcS-bU-jak" secondAttribute="trailing" id="gBp-Mg-wpf"/>
+                            <constraint firstItem="PcS-bU-jak" firstAttribute="top" secondItem="3Q1-Rm-V2M" secondAttribute="top" id="j3b-8h-RHz"/>
+                            <constraint firstItem="3VQ-mt-Bec" firstAttribute="leading" secondItem="cLs-f2-2P7" secondAttribute="leading" id="qrx-an-B3y"/>
+                            <constraint firstItem="PcS-bU-jak" firstAttribute="leading" secondItem="cLs-f2-2P7" secondAttribute="leading" id="tUZ-Tt-A84"/>
                             <constraint firstItem="POu-cS-Kvr" firstAttribute="leading" secondItem="cLs-f2-2P7" secondAttribute="leading" id="wae-bf-j9A"/>
                         </constraints>
                     </view>
                     <connections>
+                        <outlet property="blurredBackgroundImageView" destination="3VQ-mt-Bec" id="PTp-B2-ejK"/>
+                        <outlet property="headerContainerHeightConstraint" destination="i7i-tB-Gob" id="NQV-4q-MGV"/>
+                        <outlet property="headerContainerView" destination="PcS-bU-jak" id="g01-CX-DaB"/>
                         <outlet property="tableView" destination="POu-cS-Kvr" id="fg1-42-oOW"/>
                     </connections>
                 </viewController>

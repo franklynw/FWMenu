@@ -15,6 +15,8 @@ public struct FWMenu<Label: View>: View, FWMenuPresenting {
      Also addresses an issue in Apple's version where the background continues to receive touch events while the menu is showing
      */
     
+    @Binding private var isPresented: Bool
+    
     public let content: () -> ([FWMenuSection])
     
     public var menuType: FWMenuType // TODO: - FWMenuType.settings is somewhat fragile, & will probably crash if the client code alters the structure of the menus after an item is selected
@@ -25,9 +27,10 @@ public struct FWMenu<Label: View>: View, FWMenuPresenting {
     
     var accentColor: Color?
     var hidePolicy: HidePolicy = .alwaysShow
+    var pressed: (() -> ())?
+    var getFrame: ((CGRect) -> ())?
     
     private let label: Label?
-    private let text: Text?
     private let image: Image?
     private let title: String?
     private let imageName: String?
@@ -47,119 +50,92 @@ public struct FWMenu<Label: View>: View, FWMenuPresenting {
     }
     
     
+    private init(title: String?, image: Image?, imageSystemName: String?, initialMenuTitle: FWMenuItem.Title? = nil, sections: @escaping () -> ([FWMenuSection])) where Label == Text {
+        self.title = title
+        self.image = image
+        imageName = imageSystemName
+        content = { () -> [FWMenuSection] in
+            sections().compactMap { ContentTidier.tidyMenuContent($0) }
+        }
+        menuType = .standard(title: initialMenuTitle)
+        label = nil
+        _isPresented = Binding<Bool>(get: { false }, set: { _ in })
+    }
+    
+    
     // MARK: - Initialise with an array of FWMenuSection
     
-    public init(label: Label, initialMenuTitle: FWMenuItem.MenuTitle? = nil, sections: @escaping () -> ([FWMenuSection])) {
+    public init(label: Label, initialMenuTitle: FWMenuItem.Title? = nil, sections: @escaping () -> ([FWMenuSection])) {
         self.label = label
         content = { () -> [FWMenuSection] in
             sections().compactMap { ContentTidier.tidyMenuContent($0) }
         }
         menuType = .standard(title: initialMenuTitle)
-        text = nil
         image = nil
         title = nil
         imageName = nil
+        _isPresented = Binding<Bool>(get: { false }, set: { _ in })
     }
     
-    public init(title: String, imageSystemName: String, initialMenuTitle: FWMenuItem.MenuTitle? = nil, sections: @escaping () -> ([FWMenuSection])) where Label == SwiftUI.Label<Text, AnyView> {
-        self.title = title
-        self.imageName = imageSystemName
-        content = { () -> [FWMenuSection] in
-            sections().compactMap { ContentTidier.tidyMenuContent($0) }
-        }
-        menuType = .standard(title: initialMenuTitle)
-        label = nil
-        text = nil
-        image = nil
+    public init(title: String, imageSystemName: String, initialMenuTitle: FWMenuItem.Title? = nil, sections: @escaping () -> ([FWMenuSection])) where Label == Text {
+        self.init(title: title, image: nil, imageSystemName: imageSystemName, initialMenuTitle: initialMenuTitle, sections: sections)
     }
     
-    public init(title: String, image: Image, initialMenuTitle: FWMenuItem.MenuTitle? = nil, sections: @escaping () -> ([FWMenuSection])) where Label == SwiftUI.Label<Text, AnyView> {
-        self.title = title
-        self.image = image
-        content = { () -> [FWMenuSection] in
-            sections().compactMap { ContentTidier.tidyMenuContent($0) }
-        }
-        menuType = .standard(title: initialMenuTitle)
-        label = nil
-        text = nil
-        imageName = nil
+    public init(title: String, image: Image, initialMenuTitle: FWMenuItem.Title? = nil, sections: @escaping () -> ([FWMenuSection])) where Label == Text {
+        self.init(title: title, image: image, imageSystemName: nil, initialMenuTitle: initialMenuTitle, sections: sections)
     }
     
-    public init(title: String, initialMenuTitle: FWMenuItem.MenuTitle? = nil, sections: @escaping () -> ([FWMenuSection])) where Label == Text {
-        self.title = title
-        content = { () -> [FWMenuSection] in
-            sections().compactMap { ContentTidier.tidyMenuContent($0) }
-        }
-        menuType = .standard(title: initialMenuTitle)
-        label = nil
-        text = nil
-        image = nil
-        imageName = nil
+    public init(title: String, initialMenuTitle: FWMenuItem.Title? = nil, sections: @escaping () -> ([FWMenuSection])) where Label == Text {
+        self.init(title: title, image: nil, imageSystemName: nil, initialMenuTitle: initialMenuTitle, sections: sections)
     }
     
-    public init(imageSystemName: String, initialMenuTitle: FWMenuItem.MenuTitle? = nil, sections: @escaping () -> ([FWMenuSection])) where Label == AnyView {
-        self.imageName = imageSystemName
-        content = { () -> [FWMenuSection] in
-            sections().compactMap { ContentTidier.tidyMenuContent($0) }
-        }
-        menuType = .standard(title: initialMenuTitle)
-        title = nil
-        label = nil
-        text = nil
-        image = nil
+    public init(imageSystemName: String, initialMenuTitle: FWMenuItem.Title? = nil, sections: @escaping () -> ([FWMenuSection])) where Label == Text {
+        self.init(title: nil, image: nil, imageSystemName: imageSystemName, initialMenuTitle: initialMenuTitle, sections: sections)
     }
     
-    public init(image: Image, initialMenuTitle: FWMenuItem.MenuTitle? = nil, sections: @escaping () -> ([FWMenuSection])) where Label == AnyView {
-        self.image = image
-        content = { () -> [FWMenuSection] in
-            sections().compactMap { ContentTidier.tidyMenuContent($0) }
-        }
-        menuType = .standard(title: initialMenuTitle)
-        title = nil
-        label = nil
-        text = nil
-        imageName = nil
+    public init(image: Image, initialMenuTitle: FWMenuItem.Title? = nil, sections: @escaping () -> ([FWMenuSection])) where Label == Text {
+        self.init(title: nil, image: image, imageSystemName: nil, initialMenuTitle: initialMenuTitle, sections: sections)
     }
     
     
     // MARK: - Initialise with a single FWMenuSection
     
-    public init(label: Label, initialMenuTitle: FWMenuItem.MenuTitle? = nil, items: @escaping () -> (FWMenuSection)) {
+    public init(label: Label, initialMenuTitle: FWMenuItem.Title? = nil, items: @escaping () -> (FWMenuSection)) {
         let sections =  { () -> [FWMenuSection] in
             [items()]
         }
         self.init(label: label, initialMenuTitle: initialMenuTitle, sections: sections)
     }
     
-    public init(title: String, imageSystemName: String, initialMenuTitle: FWMenuItem.MenuTitle? = nil, items: @escaping () -> (FWMenuSection)) where Label == SwiftUI.Label<Text, AnyView> {
+    public init(title: String, imageSystemName: String, initialMenuTitle: FWMenuItem.Title? = nil, items: @escaping () -> (FWMenuSection)) where Label == Text {
         let sections =  { () -> [FWMenuSection] in
             [items()]
         }
         self.init(title: title, imageSystemName: imageSystemName, initialMenuTitle: initialMenuTitle, sections: sections)
     }
     
-    public init(title: String, image: Image, initialMenuTitle: FWMenuItem.MenuTitle? = nil, items: @escaping () -> (FWMenuSection)) where Label == SwiftUI.Label<Text, AnyView> {
+    public init(title: String, image: Image, initialMenuTitle: FWMenuItem.Title? = nil, items: @escaping () -> (FWMenuSection)) where Label == Text {
         let sections =  { () -> [FWMenuSection] in
             [items()]
         }
         self.init(title: title, image: image, initialMenuTitle: initialMenuTitle, sections: sections)
     }
     
-    public init(title: String, initialMenuTitle: FWMenuItem.MenuTitle? = nil, items: @escaping () -> (FWMenuSection)) where Label == Text {
+    public init(title: String, initialMenuTitle: FWMenuItem.Title? = nil, items: @escaping () -> (FWMenuSection)) where Label == Text {
         let sections =  { () -> [FWMenuSection] in
             [items()]
         }
         self.init(title: title, initialMenuTitle: initialMenuTitle, sections: sections)
     }
     
-    public init(imageSystemName: String, initialMenuTitle: FWMenuItem.MenuTitle? = nil, items: @escaping () -> (FWMenuSection)) where Label == AnyView {
+    public init(imageSystemName: String, initialMenuTitle: FWMenuItem.Title? = nil, items: @escaping () -> (FWMenuSection)) where Label == Text {
         let sections =  { () -> [FWMenuSection] in
             [items()]
         }
         self.init(imageSystemName: imageSystemName, initialMenuTitle: initialMenuTitle, sections: sections)
     }
     
-    public init(image: Image, initialMenuTitle: FWMenuItem.MenuTitle? = nil, items: @escaping () -> (FWMenuSection)) where Label == AnyView {
+    public init(image: Image, initialMenuTitle: FWMenuItem.Title? = nil, items: @escaping () -> (FWMenuSection)) where Label == Text {
         let sections =  { () -> [FWMenuSection] in
             [items()]
         }
@@ -176,14 +152,14 @@ public struct FWMenu<Label: View>: View, FWMenuPresenting {
         self.init(label: label, sections: sections)
     }
     
-    public init(title: String, imageSystemName: String, menu: @escaping () -> FWMenuItem) where Label == SwiftUI.Label<Text, AnyView> {
+    public init(title: String, imageSystemName: String, menu: @escaping () -> FWMenuItem) where Label == Text {
         let sections =  { () -> [FWMenuSection] in
             menu().menuSections
         }
         self.init(title: title, imageSystemName: imageSystemName, initialMenuTitle: menu().menuTitle, sections: sections)
     }
     
-    public init(title: String, image: Image, menu: @escaping () -> FWMenuItem) where Label == SwiftUI.Label<Text, AnyView> {
+    public init(title: String, image: Image, menu: @escaping () -> FWMenuItem) where Label == Text {
         let sections =  { () -> [FWMenuSection] in
             menu().menuSections
         }
@@ -197,14 +173,14 @@ public struct FWMenu<Label: View>: View, FWMenuPresenting {
         self.init(title: title, initialMenuTitle: menu().menuTitle, sections: sections)
     }
     
-    public init(imageSystemName: String, menu: @escaping () -> FWMenuItem) where Label == AnyView {
+    public init(imageSystemName: String, menu: @escaping () -> FWMenuItem) where Label == Text {
         let sections =  { () -> [FWMenuSection] in
             menu().menuSections
         }
         self.init(imageSystemName: imageSystemName, initialMenuTitle: menu().menuTitle, sections: sections)
     }
     
-    public init(image: Image, menu: @escaping () -> FWMenuItem) where Label == AnyView {
+    public init(image: Image, menu: @escaping () -> FWMenuItem) where Label == Text {
         let sections =  { () -> [FWMenuSection] in
             menu().menuSections
         }
@@ -220,17 +196,39 @@ public struct FWMenu<Label: View>: View, FWMenuPresenting {
             GeometryReader { geometry in
                 Button(
                     action: {
-                        let frame = geometry.frame(in: .named(MenuCoordinateSpaceModifier.menuCoordinateSpaceName))
-                        present(with: frame)
+                        if let pressed = pressed {
+                            pressed()
+                        } else {
+                            let frame = geometry.frame(in: .named(MenuCoordinateSpaceModifier.menuCoordinateSpaceName))
+                            present(with: frame)
+                        }
                     }, label: {
                         buttonLabel()
                     }
                 )
                 .frame(width: geometry.frame(in: .local).width, height: geometry.frame(in: .local).height)
                 .opacity(content().isEmpty ? hidePolicy.opacity : 1)
+                .onAppear {
+                    getFrame?(geometry.frame(in: .named(MenuCoordinateSpaceModifier.menuCoordinateSpaceName)))
+                }
+                
+                DoIf($isPresented) {
+                    let frame = geometry.frame(in: .named(MenuCoordinateSpaceModifier.menuCoordinateSpaceName))
+                    present(with: frame)
+                }
             }
             .fixedSize()
         }
+    }
+    
+    /// Binds to an isPresented Bool so the menu can be presented programmatically
+    /// - Parameter isPresented: a binding to a Bool value
+    /// - Parameter pressed: if you provide a pressed action here, it prevents the menu from being displayed when the button is pressed, and will instead rely on the isPresented binding (which could be triggered by the pressed action)
+    public func present(isPresented: Binding<Bool>, pressed: (() -> ())? = nil) -> Self {
+        var copy = self
+        copy._isPresented = isPresented
+        copy.pressed = pressed
+        return copy
     }
     
     

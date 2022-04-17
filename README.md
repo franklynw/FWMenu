@@ -1,11 +1,12 @@
 # FWMenu
 
-A (almost) drop-in replacement for SwiftUI's Menu, but with some customisation options. It also properly prevents touch events from affecting views behind the menu, which is currently an issue with the Apple Menu.
-In addition, it has a "Settings" mode, which allows the hierarchy of menus to be displayed and updated as items are selected (see screen shot) - this is sort of in Beta, & I'm not 100% sure that it's even necessary...
+* A (almost) drop-in replacement for SwiftUI's Menu, but with some customisation options. It also properly prevents touch events from affecting views behind the menu, which is currently an issue with the Apple Menu.
+* In addition, it has a "Settings" mode, which allows the hierarchy of menus to be displayed and updated as items are selected (see screen shot) - this is sort of in Beta, & I'm not 100% sure that it's even necessary...
+* As a bonus, it can also be presented programmatically.
 
-Note that the content for the menus is provided by closures, so that it can be dynamically updated.
+> Note that the content for the menus is provided by closures, so that it can be dynamically updated.
 
-<img src="Resources//Example1.png" alt="Example 1"/> <img src="Resources//Example2.png" alt="Example 2"/>
+<img src="Resources//Example1.png" alt="Example 1"/> <img src="Resources//Example2.png" alt="Example 2"/> <img src="Resources//Example3.png" alt="Example 3"/>
 
 ## Installation
 
@@ -126,7 +127,7 @@ There are several customisation options -
 
 ### Button accent colour
 
-Sets the accent colour of the menu button
+Sets the accent colour of the menu button.
 
 ```swift
 FWMenu(imageSystemName: "chevron.down", items: viewModel.menuContent)
@@ -135,7 +136,7 @@ FWMenu(imageSystemName: "chevron.down", items: viewModel.menuContent)
 
 ### Menu background colour
 
-This sets the global background colour for the menu & sub-menus
+This sets the global background colour for the menu & sub-menus.
 
 ```swift
 FWMenu(imageSystemName: "chevron.down", items: viewModel.menuContent)
@@ -144,7 +145,7 @@ FWMenu(imageSystemName: "chevron.down", items: viewModel.menuContent)
 
 ### Menu text and icon colours
 
-This sets the global text and icon colours for the menu and sub-menus
+This sets the global text and icon colours for the menu and sub-menus.
 
 ```swift
 FWMenu(imageSystemName: "chevron.down", items: viewModel.menuContent)
@@ -153,7 +154,7 @@ FWMenu(imageSystemName: "chevron.down", items: viewModel.menuContent)
 
 ### Menu Font
 
-This sets the global font for the menu & sub-menus - only in Beta, and only works with system fonts with no modifiers such as weight, etc
+This sets the global font for the menu & sub-menus - only in Beta, and only works with system fonts with no modifiers such as weight, etc.
 
 ```swift
 FWMenu(imageSystemName: "chevron.down", items: viewModel.menuContent)
@@ -163,7 +164,7 @@ FWMenu(imageSystemName: "chevron.down", items: viewModel.menuContent)
 ### Hide policy if the menu content is empty
 
 Specify how to present the menu button if the menu content is empty - this will update as your data structure is updated.
-In this example, the button will dim to 50% opacity
+In this example, the button will dim to 50% opacity.
 
 ```swift
 FWMenu(imageSystemName: "chevron.down", items: viewModel.menuContent)
@@ -184,11 +185,22 @@ FWMenu(imageSystemName: "chevron.down", items: viewModel.menuContent)
 ### Dismiss on device rotation
 
 Currently, the menu doesn't support device rotation, and there will be bizarre results if your app does support it. Set this to automatically dismiss menus when the device is rotated.
-If your app doesn't support device rotation, this isn't required
+If your app doesn't support device rotation, this isn't required.
 
 ```swift
 FWMenu(imageSystemName: "chevron.down", items: viewModel.menuContent)
     .dismissOnDeviceRotation
+```
+
+### Present Menu programmatically
+
+As a bonus, menus can be presented programmatically. This will simply present the menu from the button as if it had been pressed. If you provide a pressed closure, then pressing the button no longer presents the menu, relying totally on the isPresented binding.
+
+```swift
+FWMenu(imageSystemName: "chevron.down", items: viewModel.menuContent)
+    .present(isPresented: $viewModel.isMenuPresented) {
+        // maybe do something (possibly async) which presents the menu by setting isPresented to true
+    }
 ```
 
 
@@ -198,23 +210,61 @@ The fundamental building block for the menus is the FWMenuItem, which can be of 
 
 There are a couple of things to note -
 
-* The style parameter - this allows you to set the text colour, icon colour, background colour and font for each menu item - these settings will override the global menu style settings
-* The menuTitle parameter (only for submenu items) - allows you to set a title which will be shown at the top of the menu
+* The style parameter - this allows you to set the text colour, icon colour, background colour and font for each menu item - these settings will override the global menu style settings.
+* The menuTitle parameter (only for submenu items) - allows you to set a title which will be shown at the top of the menu.
 
-The FWMenuSection is just a simple struct for wrapping multiple FWMenuItems to make a section
+The FWMenuSection is just a simple struct for wrapping multiple FWMenuItems to make a section.
 
 
 ## FWMenuPresenter
 
-Should you wish to present a menu programmatically, use the FWMenuPresenter view. It works in an identical way to FWMenu, except that it's not a button, but a view with an isPresented binding.
+Should you wish to present a menu programmatically without having to tie it to a button, use the FWMenuPresenter view. It works in an identical way to FWMenu, except that it's not a button, but a view with an isPresented binding.
 Setting this to true will show the menu. You can pass in a source rect for the menu to root itself on, or if you omit that, it will centre itself on the screen
 
-This is somewhat in Beta, so there may be issues I'm unaware of
+This is somewhat in Beta, so there may be issues I'm unaware of.
+
+
+## MenuPresenter
+
+The class behind everything is the MenuPresenter, which has some static functions which can be accessed directly if required. These are -
+
+* Present from the Navigation Bar, with an x value which is relative to the screen width (0 is fully left, 1 is fully right)
+
+```swift
+static func presentFromNavBar(parent: FWMenuPresenting, withRelativeX relativeX: CGFloat)
+```
+
+* Present from a source rect
+
+```swift
+static func present(parent: FWMenuPresenting, with buttonFrame: CGRect?)
+```
+
+* Programmatically dismiss any menu, with an action to invoke on completion (normally this is when the menu item action would be invoked)
+
+```swift
+static func dismiss(_ action: Action? = nil)
+```
+
+The 'present' functions require that you implement the FWMenuPresenting protocol, which is hidden from you when you use FWMenu or FWMenuPresenter -
+
+### FWMenuPresenting
+
+```swift
+var content: () -> ([FWMenuSection]) { get }
+var menuType: FWMenuType { get }
+var contentBackgroundColor: Color? { get }
+var contentAccentColor: Color? { get }
+var font: Font? { get }
+var hideMenuOnDeviceRotation: Bool { get }
+```
+
+There are default implementations of menuType (.standard) and hideMenuOnDeviceRotation (false).
 
 
 ## Issues
 
-Currently, the menu button only works properly if it is an image only. There is an issue where the GeometryReader masks the content size of more complex buttons and they don't display properly.
+Currently, the menu button works properly if it is an image only. There is an issue where the GeometryReader masks the content size of more complex buttons and they don't display properly.
 If anyone can fix this, please let me know!
 
 ## Dependencies
@@ -222,6 +272,6 @@ If anyone can fix this, please let me know!
 Requires CGExtensions, which is linked. GitHub page is [here](https://github.com/franklynw/CGExtensions)
 
 
-## License  
+## Licence  
 
-`FWMenu` is available under the MIT license
+`FWMenu` is available under the MIT licence.

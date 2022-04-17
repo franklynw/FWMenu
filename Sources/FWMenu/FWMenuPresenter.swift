@@ -23,14 +23,14 @@ public struct FWMenuPresenter: View, FWMenuPresenting {
     private let sourceRect: CGRect?
 
     
-    public init(isPresented: Binding<Bool>, initialMenuTitle: FWMenuItem.MenuTitle? = nil, sourceRect: CGRect? = nil, menuSections: @escaping () -> [FWMenuSection]) {
+    public init(isPresented: Binding<Bool>, initialMenuTitle: FWMenuItem.Title? = nil, sourceRect: CGRect? = nil, menuSections: @escaping () -> [FWMenuSection]) {
         _isPresented = isPresented
         content = menuSections
         menuType = .standard(title: initialMenuTitle)
         self.sourceRect = sourceRect
     }
     
-    public init(isPresented: Binding<Bool>, initialMenuTitle: FWMenuItem.MenuTitle? = nil, sourceRect: CGRect? = nil, menuItems: @escaping () -> FWMenuSection) {
+    public init(isPresented: Binding<Bool>, initialMenuTitle: FWMenuItem.Title? = nil, sourceRect: CGRect? = nil, menuItems: @escaping () -> FWMenuSection) {
         _isPresented = isPresented
         content = { () -> [FWMenuSection] in
             return [menuItems()]
