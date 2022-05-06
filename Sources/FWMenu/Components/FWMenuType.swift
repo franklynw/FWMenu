@@ -21,12 +21,12 @@ public enum FWMenuType {
     /// The standard case
     /// - Parameters:
     ///   - title: an optional title for the menu
-    case standard(title: FWMenuItem.Title? = nil)
+    case standard(title: FWMenuItem.Title? = nil, presentedFromKeyboardAccessory: Bool = false)
     
     /// The settings case
     /// - Parameters:
     ///   - title: an optional title for the menu
-    case settings(title: FWMenuItem.Title? = nil)
+    case settings(title: FWMenuItem.Title? = nil, presentedFromKeyboardAccessory: Bool = false)
     
     /// Returns a .standard FWMenuType, with no title
     public static let standard: FWMenuType = .standard()
@@ -41,8 +41,15 @@ extension FWMenuType {
     
     var menuTitle: FWMenuItem.Title? {
         switch self {
-        case .standard(let title), .settings(let title):
+        case .standard(let title, _), .settings(let title, _):
             return title
+        }
+    }
+    
+    var presentedFromKeyboardAccessory: Bool {
+        switch self {
+        case .standard(_, let presentedFromKeyboardAccessory), .settings(_, let presentedFromKeyboardAccessory):
+            return presentedFromKeyboardAccessory
         }
     }
 }

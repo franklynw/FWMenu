@@ -15,6 +15,7 @@ public protocol FWMenuPresenting {
     var contentAccentColor: Color? { get }
     var font: Font? { get }
     var hideMenuOnDeviceRotation: Bool { get }
+    var forceFullScreen: Bool { get }
 }
 
 
@@ -25,6 +26,10 @@ public extension FWMenuPresenting {
     }
     
     var hideMenuOnDeviceRotation: Bool {
+        return false
+    }
+    
+    var forceFullScreen: Bool {
         return false
     }
 }

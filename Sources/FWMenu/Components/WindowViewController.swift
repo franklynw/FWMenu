@@ -21,6 +21,7 @@ class WindowViewController: UIViewController {
     var accentColor: Color?
     var font: Font?
     var hideMenuOnDeviceRotation = false
+    var forceFullScreen = false
     var finished: ((Action?) -> ())!
     var dismiss: ((((Bool) -> ())?) -> ())?
     var replace: ((((Bool) -> ())?) -> ())?
@@ -252,7 +253,7 @@ extension WindowViewController {
         } else if availableTopSpace > availableBottomSpace { // above the button, but reduce the menu height
             x = min(max(sourceRect.maxX - menuSize.width, menuPadding), screenSize.width - menuSize.width - menuPadding)
             y = max(sourceRect.minY - menuSize.height - menuPadding, topPadding)
-            height = availableTopSpace
+            height = forceFullScreen ? menuSize.height - menuPadding : availableTopSpace
         } else { // below the button, but reduce the menu height
             x = min(max(sourceRect.maxX - menuSize.width, menuPadding), screenSize.width - menuSize.width - menuPadding)
             y = sourceRect.maxY + menuPadding * 2

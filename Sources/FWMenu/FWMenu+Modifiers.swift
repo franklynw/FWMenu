@@ -72,4 +72,11 @@ extension FWMenu {
         copy.getFrame = getFrame
         return copy
     }
+    
+    /// A special-use case for when the menu is presented from a keyboard accessory bar - otherwise the keyboard hides & the menu is left floating only in the top half of the screen
+    public func forceFullScreen(_ forceFullScreen: Bool) -> Self {
+        var copy = self
+        copy.forceFullScreen = forceFullScreen
+        return copy
+    }
 }
