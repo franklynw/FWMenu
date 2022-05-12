@@ -64,6 +64,10 @@ class MenuViewController: UIViewController {
         
         super.viewDidLoad()
         
+        if #available(iOS 15.0, *) {
+            tableView.sectionHeaderTopPadding = 0
+        }
+        
         if let contentBackgroundColor = contentBackgroundColor {
             menuBackgroundColor = UIColor(contentBackgroundColor).withAlphaComponent(0.9)
         } else {
