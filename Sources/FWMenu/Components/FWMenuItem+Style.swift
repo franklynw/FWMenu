@@ -18,24 +18,34 @@ extension FWMenuItem {
          It can be initialised as plain (uses menu defaults), styled or uiStyled - the styled cases allow customisation of font, text colour, icon colour & background colour
          */
         
+        public enum MenuHeading {
+            case none
+            case menuItem
+            case title(Title)
+        }
+        
         /// The plain style case
-        case plain
+        /// - Parameters:
+        ///   - menuHeading: any heading for the menu
+        case plain(menuHeading: MenuHeading = .none)
         
         /// The styled case
         /// - Parameters:
+        ///   - menuHeading: any heading for the menu
         ///   - font: the SwiftUI Font to use for the element
         ///   - textColor: the SwiftUI Color to use for the element text
         ///   - iconColor: the SwiftUI Color to use for the element icon
         ///   - backgroundColor: the SwiftUI Color to use for the element background
-        case styled(font: Font? = nil, textColor: Color? = nil, iconColor: Color? = nil, backgroundColor: Color? = nil)
+        case styled(menuHeading: MenuHeading = .none, font: Font? = nil, textColor: Color? = nil, iconColor: Color? = nil, backgroundColor: Color? = nil)
         
         /// The styled case
         /// - Parameters:
+        ///   - menuHeading: any heading for the menu
         ///   - font: the UIFont to use for the element
         ///   - textColor: the UIColor to use for the element text
         ///   - iconColor: the UIColor to use for the element icon
         ///   - backgroundColor: the UIColor to use for the element background
-        case uiStyled(font: UIFont? = nil, textColor: UIColor? = nil, iconColor: UIColor? = nil, backgroundColor: UIColor? = nil)
+        case uiStyled(menuHeading: MenuHeading = .none, font: UIFont? = nil, textColor: UIColor? = nil, iconColor: UIColor? = nil, backgroundColor: UIColor? = nil)
     }
 }
 
@@ -53,7 +63,7 @@ extension FWMenuItem.Style {
             titleLabel.textColor = color
             icon?.tintColor = color
             
-        case .styled(let font, let textColor, let iconColor, let backgroundColor):
+        case .styled(_, let font, let textColor, let iconColor, let backgroundColor):
             
             if let font = font {
                 titleLabel.font = font.uiFont()
@@ -66,7 +76,7 @@ extension FWMenuItem.Style {
                 backgroundView?.backgroundColor = UIColor(backgroundColor)
             }
             
-        case .uiStyled(let font, let textColor, let iconColor, let backgroundColor):
+        case .uiStyled(_, let font, let textColor, let iconColor, let backgroundColor):
             
             if let font = font {
                 titleLabel.font = font
@@ -85,10 +95,17 @@ extension FWMenuItem.Style {
         switch self {
         case .plain:
             return nil
-        case .styled(_, _, _, let backgroundColor):
+        case .styled(_, _, _, _, let backgroundColor):
             return backgroundColor != nil ? UIColor(backgroundColor!) : nil
-        case .uiStyled(_, _, _, let backgroundColor):
+        case .uiStyled(_, _, _, _, let backgroundColor):
             return backgroundColor
+        }
+    }
+    
+    var menuHeading: MenuHeading {
+        switch self {
+        case .plain(let heading), .styled(let heading, _, _, _, _), .uiStyled(let heading, _, _, _, _):
+            return heading
         }
     }
 }
