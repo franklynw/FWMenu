@@ -25,15 +25,14 @@ public enum FWMenuItem {
     ///   - systemImageName: the name of a system image for the menu item icon (nil for no image)
     ///   - style: the style for the menu item
     ///   - action: the action invoked when the menu item is selected
-    case action(name: String, imageName: String?, systemImageName: String?, style: Style, action: (() -> ()))
+    case action(name: String, imageName: String? = nil, systemImageName: String?, style: Style = .plain(), action: (() -> ()))
     
     /// The case for a menu item with submenus
     /// - Parameters:
     ///   - name: the menu item name (as it appears in the menu)
     ///   - style: the style for the menu item
     ///   - menuSections: the content for the submenus
-    ///   - menuTitle: an optional title for the menu (nil for no title)
-    case submenu(name: String, style: Style = .plain, menuSections: [FWMenuSection], menuTitle: Title? = nil)
+    case submenu(name: String, style: Style = .plain(), menuSections: [FWMenuSection])
     
     /// Creates an action menu item
     /// - Parameters:
@@ -42,7 +41,7 @@ public enum FWMenuItem {
     ///   - style: the style for the menu item
     ///   - action: the action invoked when the menu item is selected
     /// - Returns: the .action enum case, with the provided parameters
-    public static func action(name: String, imageName: String? = nil, style: Style = .plain, action: @escaping (() -> ())) -> FWMenuItem {
+    public static func action(name: String, imageName: String? = nil, style: Style = .plain(), action: @escaping (() -> ())) -> FWMenuItem {
         return .action(name: name, imageName: imageName, systemImageName: nil, style: style, action: action)
     }
     
@@ -53,7 +52,7 @@ public enum FWMenuItem {
     ///   - style: the style for the menu item
     ///   - action: the action invoked when the menu item is selected
     /// - Returns: the .action enum case, with the provided parameters
-    public static func action(name: String, systemImageName: String, style: Style = .plain, action: @escaping (() -> ())) -> FWMenuItem {
+    public static func action(name: String, systemImageName: String, style: Style = .plain(), action: @escaping (() -> ())) -> FWMenuItem {
         return .action(name: name, imageName: nil, systemImageName: systemImageName, style: style, action: action)
     }
     
@@ -62,9 +61,8 @@ public enum FWMenuItem {
     ///   - name: the menu item name (as it appears in the menu)
     ///   - style: the style for the menu item
     ///   - menuItems: the content for the submenus
-    ///   - menuTitle: an optional title for the menu (nil for no title)
-    public static func submenu(name: String, style: Style = .plain, menuItems: FWMenuSection, menuTitle: Title? = nil) -> FWMenuItem {
-        return .submenu(name: name, style: style, menuSections: [menuItems], menuTitle: menuTitle)
+    public static func submenu(name: String, style: Style = .plain(), menuItems: FWMenuSection) -> FWMenuItem {
+        return .submenu(name: name, style: style, menuSections: [menuItems])
     }
 }
 
@@ -74,7 +72,7 @@ extension FWMenuItem {
     
     var name: String {
         switch self {
-        case .action(let name, _, _, _, _), .submenu(let name, _, _, _):
+        case .action(let name, _, _, _, _), .submenu(let name, _, _):
             return name
         }
     }
@@ -95,7 +93,7 @@ extension FWMenuItem {
     
     var style: Style {
         switch self {
-        case .action(_, _, _, let style, _), .submenu(_, let style, _, _):
+        case .action(_, _, _, let style, _), .submenu(_, let style, _):
             return style
         }
     }
@@ -120,17 +118,21 @@ extension FWMenuItem {
         switch self {
         case .action:
             return []
-        case .submenu(_, _, let menuSections, _):
+        case .submenu(_, _, let menuSections):
             return menuSections
         }
     }
     
     var menuTitle: Title? {
         switch self {
-        case .action:
-            return nil
-        case .submenu(_, _, _, let menuTitle):
-            return menuTitle
+        case .action(_, _, _, let style, _), .submenu(_, let style, _):
+            let title: FWMenuItem.Title?
+            switch style.menuHeading {
+            case .none: title = nil
+            case .menuItem: title = .standard(title: name)
+            case .title(let menuTitle): title = menuTitle
+            }
+            return title
         }
     }
 }
