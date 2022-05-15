@@ -36,6 +36,10 @@ extension FWMenuItem {
         ///   - style: style attributes for the menu title
         case styled(title: String, iconImage: UIImage? = nil, style: TitleStyle)
         
+        public init(_ stringLiteral: String) {
+            self = .standard(title: stringLiteral)
+        }
+        
         public func applyToLabel(_ label: UILabel, imageView: UIImageView? = nil, backgroundView: UIView? = nil) {
             
             label.text = text
