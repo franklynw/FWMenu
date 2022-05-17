@@ -55,7 +55,6 @@ public class MenuPresenter {
             viewController.menuType = parent.menuType
             viewController.contentBackgroundColor = parent.contentBackgroundColor
             viewController.accentColor = parent.contentAccentColor
-            viewController.font = parent.font
             viewController.hideMenuOnDeviceRotation = parent.hideMenuOnDeviceRotation
             viewController.forceFullScreen = parent.forceFullScreen
             viewController.menuButtonFrame = buttonFrame

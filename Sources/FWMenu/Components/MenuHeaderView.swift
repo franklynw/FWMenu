@@ -10,6 +10,7 @@ import SwiftUI
 
 class MenuHeaderView: UIView {
     
+    private static let font = UIFont.boldSystemFont(ofSize: 17)
     private let title: FWMenuItem.Title
     
     var size: CGSize {
@@ -29,7 +30,7 @@ class MenuHeaderView: UIView {
             additionalPadding = rowPadding + 42
         }
         
-        let size = title.text.boundingRect(with: CGSize(width: maxTextWidth, height: .greatestFiniteMagnitude), options: .usesLineFragmentOrigin, attributes: [NSAttributedString.Key.font : UIFont.systemFont(ofSize: 17)], context: nil).size
+        let size = title.text.boundingRect(with: CGSize(width: maxTextWidth, height: .greatestFiniteMagnitude), options: .usesLineFragmentOrigin, attributes: [NSAttributedString.Key.font: Self.font], context: nil).size
         
         let width = size.width + additionalPadding
         let height = size.height + 22.5
@@ -88,7 +89,7 @@ class MenuHeaderView: UIView {
         
         let style = title.style ?? .plain
         
-        style.configure(titleLabel: label, icon: iconImageView, backgroundView: self, menuAccentColor: menuAccentColor, menuFont: .preferredFont(forTextStyle: .headline))
+        style.configure(titleLabel: label, icon: iconImageView, backgroundView: self, menuAccentColor: menuAccentColor, menuFont: Self.font)
         self.backgroundColor = title.style?.backgroundColor ?? backgroundColor
         
         let tapGesture: UITapGestureRecognizer = .gestureRecognizer { _ in
