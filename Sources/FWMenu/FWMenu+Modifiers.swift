@@ -79,4 +79,12 @@ extension FWMenu {
         copy.forceFullScreen = forceFullScreen
         return copy
     }
+    
+    /// How to display the menu button if there is no menu content
+    /// - Parameter pressed: a closure invoked when the menu button is tapped (in addition to showing the menu)
+    public func pressed(_ pressed: @escaping () -> ()) -> Self {
+        var copy = self
+        copy.pressed = pressed
+        return copy
+    }
 }

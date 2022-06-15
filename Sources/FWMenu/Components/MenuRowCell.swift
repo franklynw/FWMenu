@@ -41,7 +41,7 @@ class MenuRowCell: UITableViewCell {
         
         menuItem.style.configure(titleLabel: titleLabel, icon: iconImage, backgroundView: backgroundColorView, menuAccentColor: accentColor, menuFont: font)
         
-        rowBackgroundColor = backgroundColorView.backgroundColor?.withAlphaComponent(0.5)
+        rowBackgroundColor = backgroundColorView.backgroundColor
         backgroundColorView.backgroundColor = rowBackgroundColor
         
         if titleTrailingConstraint == nil {

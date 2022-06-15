@@ -197,12 +197,8 @@ public struct FWMenu<Label: View>: View, FWMenuPresenting {
             GeometryReader { geometry in
                 Button(
                     action: {
-                        if let pressed = pressed {
-                            pressed()
-                        } else {
-                            let frame = geometry.frame(in: .named(MenuCoordinateSpaceModifier.menuCoordinateSpaceName))
-                            present(with: frame)
-                        }
+                        let frame = geometry.frame(in: .named(MenuCoordinateSpaceModifier.menuCoordinateSpaceName))
+                        present(with: frame)
                     }, label: {
                         buttonLabel()
                     }
@@ -224,7 +220,7 @@ public struct FWMenu<Label: View>: View, FWMenuPresenting {
     
     /// Binds to an isPresented Bool so the menu can be presented programmatically
     /// - Parameter isPresented: a binding to a Bool value
-    /// - Parameter pressed: if you provide a pressed action here, it prevents the menu from being displayed when the button is pressed, and will instead rely on the isPresented binding (which could be triggered by the pressed action)
+    /// - Parameter pressed: if you provide a pressed action here, it is invoked when the button is pressed in addition to displaying the menu
     public func present(isPresented: Binding<Bool>, pressed: (() -> ())? = nil) -> Self {
         var copy = self
         copy._isPresented = isPresented
@@ -236,6 +232,7 @@ public struct FWMenu<Label: View>: View, FWMenuPresenting {
     // MARK: - Private
     
     private func present(with frame: CGRect) {
+        pressed?()
         MenuPresenter.present(parent: self, with: frame)
     }
     
