@@ -13,7 +13,6 @@ public protocol FWMenuPresenting {
     var menuType: FWMenuType { get }
     var contentBackgroundColor: Color? { get }
     var contentAccentColor: Color? { get }
-    var font: Font? { get }
     var hideMenuOnDeviceRotation: Bool { get }
     var forceFullScreen: Bool { get }
 }

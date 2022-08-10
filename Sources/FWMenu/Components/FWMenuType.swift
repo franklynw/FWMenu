@@ -21,12 +21,12 @@ public enum FWMenuType {
     /// The standard case
     /// - Parameters:
     ///   - title: an optional title for the menu
-    case standard(title: FWMenuItem.Title? = nil, presentedFromKeyboardAccessory: Bool = false)
+    case standard(title: FWMenuItem.Title? = nil, presentedFromKeyboardAccessory: Bool = false, hideOnDeviceRotation: Bool = false)
     
     /// The settings case
     /// - Parameters:
     ///   - title: an optional title for the menu
-    case settings(title: FWMenuItem.Title? = nil, presentedFromKeyboardAccessory: Bool = false)
+    case settings(title: FWMenuItem.Title? = nil, presentedFromKeyboardAccessory: Bool = false, hideOnDeviceRotation: Bool = false)
     
     /// Returns a .standard FWMenuType, with no title
     public static let standard: FWMenuType = .standard()
@@ -41,15 +41,22 @@ extension FWMenuType {
     
     var menuTitle: FWMenuItem.Title? {
         switch self {
-        case .standard(let title, _), .settings(let title, _):
+        case .standard(let title, _, _), .settings(let title, _, _):
             return title
         }
     }
     
     var presentedFromKeyboardAccessory: Bool {
         switch self {
-        case .standard(_, let presentedFromKeyboardAccessory), .settings(_, let presentedFromKeyboardAccessory):
+        case .standard(_, let presentedFromKeyboardAccessory, _), .settings(_, let presentedFromKeyboardAccessory, _):
             return presentedFromKeyboardAccessory
+        }
+    }
+    
+    var hideOnDeviceRotation: Bool {
+        switch self {
+        case .standard(_, _, let hideOnDeviceRotation), .settings(_, _, let hideOnDeviceRotation):
+            return hideOnDeviceRotation
         }
     }
 }

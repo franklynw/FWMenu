@@ -11,6 +11,8 @@ import CGExtensions
 
 class MenuViewController: UIViewController {
     
+    private static let font = UIFont.systemFont(ofSize: 17)
+    
     typealias Action = () -> ()
     
     @IBOutlet weak var blurredBackgroundImageView: UIImageView!
@@ -25,7 +27,6 @@ class MenuViewController: UIViewController {
     var menuContent: [FWMenuSection] = []
     var contentBackgroundColor: Color?
     var accentColor: Color?
-    var font: Font?
     var isTopMenu = true
     var selectedItem: IndexPath?
     var getBackgroundImage: ((MenuViewController) -> UIImage?)!
@@ -147,7 +148,7 @@ class MenuViewController: UIViewController {
                     additionalPadding = rowPadding + 44
                 }
                 
-                let size = $1.name.boundingRect(with: CGSize(width: maxTextWidth, height: .greatestFiniteMagnitude), options: .usesLineFragmentOrigin, attributes: [NSAttributedString.Key.font : UIFont.systemFont(ofSize: 17)], context: nil).size
+                let size = $1.name.boundingRect(with: CGSize(width: maxTextWidth, height: .greatestFiniteMagnitude), options: .usesLineFragmentOrigin, attributes: [NSAttributedString.Key.font: Self.font], context: nil).size
                 let height = size.height + 22.5
                 
                 maxWidth = max(size.width + additionalPadding, maxWidth)
@@ -463,7 +464,7 @@ extension MenuViewController: UITableViewDelegate, UITableViewDataSource {
         }
         
         let menuItem = menuContent[indexPath.section].menuItems[indexPath.row]
-        cell.configure(with: menuItem, accentColor: menuAccentColor, backgroundColor: menuBackgroundColor, font: font?.uiFont(), rowPosition: rowPosition, containingView: containingView) { [weak self, weak tableView] in
+        cell.configure(with: menuItem, accentColor: menuAccentColor, backgroundColor: menuBackgroundColor, font: Self.font, rowPosition: rowPosition, containingView: containingView) { [weak self, weak tableView] in
             
             guard let self = self, let tableView = tableView else {
                 return

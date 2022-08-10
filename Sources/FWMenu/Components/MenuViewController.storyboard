@@ -29,6 +29,7 @@
                             </view>
                             <tableView clipsSubviews="YES" contentMode="scaleToFill" alwaysBounceVertical="YES" showsHorizontalScrollIndicator="NO" showsVerticalScrollIndicator="NO" dataMode="prototypes" style="plain" separatorStyle="none" rowHeight="-1" estimatedRowHeight="-1" sectionHeaderHeight="8" sectionFooterHeight="1" translatesAutoresizingMaskIntoConstraints="NO" id="POu-cS-Kvr">
                                 <rect key="frame" x="0.0" y="0.0" width="320" height="568"/>
+                                <color key="backgroundColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
                                 <prototypes>
                                     <tableViewCell contentMode="scaleToFill" preservesSuperviewLayoutMargins="YES" selectionStyle="default" indentationWidth="10" reuseIdentifier="MenuRow" id="jUr-AK-LYH" customClass="MenuRowCell" customModule="FWMenu">
                                         <rect key="frame" x="0.0" y="44.5" width="320" height="43"/>
@@ -109,7 +110,7 @@
                             </tableView>
                         </subviews>
                         <viewLayoutGuide key="safeArea" id="3Q1-Rm-V2M"/>
-                        <color key="backgroundColor" systemColor="systemBackgroundColor"/>
+                        <color key="backgroundColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
                         <constraints>
                             <constraint firstItem="3VQ-mt-Bec" firstAttribute="top" secondItem="cLs-f2-2P7" secondAttribute="top" id="IMj-5n-0eT"/>
                             <constraint firstAttribute="bottom" secondItem="POu-cS-Kvr" secondAttribute="bottom" id="Ish-5K-LFC"/>

@@ -19,7 +19,6 @@ class WindowViewController: UIViewController {
     var menuType: FWMenuType!
     var contentBackgroundColor: Color?
     var accentColor: Color?
-    var font: Font?
     var hideMenuOnDeviceRotation = false
     var forceFullScreen = false
     var finished: ((Action?) -> ())!
@@ -190,7 +189,6 @@ extension WindowViewController {
         menuViewController.menuContent = content
         menuViewController.contentBackgroundColor = contentBackgroundColor
         menuViewController.accentColor = accentColor
-        menuViewController.font = font
         
         menuViewController.showSubmenu = { [weak self] menu, menuItem, position in
             self?.showSubMenu(from: menu, menuItem: menuItem, position: position)
